@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#007aff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Make & Spend">
+    <title>Make & Spend</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="screen active" id="homeScreen">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Make & Spend</p>
+            <h1>Home</h1>
+          </div>
+          <button class="icon-button" id="themeButton" aria-label="Toggle theme">Mode</button>
+        </header>
+        <div id="homeDashboard"></div>
+      </section>
+
+      <section class="screen" id="investmentsScreen">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Make & Spend</p>
+            <h1>Investments</h1>
+          </div>
+        </header>
+
+        <section class="balance-card">
+          <div class="row">
+            <span>Total investments</span>
+            <strong id="investmentCurrency">CAD</strong>
+          </div>
+          <div class="balance" id="investmentTotal">$0.00 CAD</div>
+        </section>
+
+        <section class="panel">
+          <h2>Totals by currency</h2>
+          <div class="currency-total-grid" id="investmentCurrencyTotals"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Choose investment tab</h2>
+          <div class="investment-choices">
+            <button class="investment-choice ca" data-add-investment-country="canada">
+              <strong>CA</strong>
+              <span>Canadian investment</span>
+              <small>CAD</small>
+            </button>
+            <button class="investment-choice br" data-add-investment-country="brazil">
+              <strong>BR</strong>
+              <span>Brasil investment</span>
+              <small>BRL</small>
+            </button>
+          </div>
+        </section>
+
+        <section class="list" id="investmentList"></section>
+      </section>
+
+      <section class="screen" id="transactionsScreen">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Make & Spend</p>
+            <h1>This Month</h1>
+          </div>
+        </header>
+
+        <section class="panel filters">
+          <div class="month-switcher">
+            <button id="previousMonth" type="button">Prev</button>
+            <strong id="selectedMonthLabel">This month</strong>
+            <button id="nextMonth" type="button">Next</button>
+          </div>
+          <input id="searchInput" type="search" placeholder="Search transactions">
+          <div class="segmented">
+            <button class="selected" data-kind-filter="all">All</button>
+            <button data-kind-filter="income">Income</button>
+            <button data-kind-filter="expense">Expense</button>
+          </div>
+          <div class="grid-two">
+            <select id="categoryFilter"></select>
+            <select id="currencyFilter">
+              <option value="all">All currencies</option>
+              <option value="CAD">CAD</option>
+              <option value="USD">USD</option>
+              <option value="BRL">BRL</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="list" id="transactionList"></section>
+      </section>
+
+      <section class="screen" id="reportsScreen">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Make & Spend</p>
+            <h1>Reports</h1>
+          </div>
+        </header>
+
+        <section class="panel">
+          <h2>Canada reports</h2>
+          <div class="report-list" id="canadaReportList"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Brasil reports</h2>
+          <div class="report-list" id="brazilReportList"></div>
+        </section>
+      </section>
+
+      <section class="screen" id="settingsScreen">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Make & Spend</p>
+            <h1>Settings</h1>
+          </div>
+        </header>
+
+        <section class="panel">
+          <label>Main currency for totals</label>
+          <select id="mainCurrency">
+            <option value="CAD">Canadian dollar - CAD</option>
+            <option value="USD">US dollar - USD</option>
+            <option value="BRL">Brazilian real - BRL</option>
+          </select>
+        </section>
+
+        <section class="panel">
+          <h2>Account settings</h2>
+          <label>Canada starting balance</label>
+          <input id="canadaStartingBalance" inputmode="decimal" type="number" step="0.01">
+          <label>Brasil starting balance</label>
+          <input id="brazilStartingBalance" inputmode="decimal" type="number" step="0.01">
+        </section>
+
+        <section class="panel">
+          <h2>Exchange rates to CAD</h2>
+          <button id="refreshRates" class="rate-refresh" type="button">Update online rates</button>
+          <p class="status-text" id="rateStatus">Manual rates are being used.</p>
+          <label>1 USD equals</label>
+          <input id="usdRate" inputmode="decimal" type="number" step="0.0001">
+          <label>1 BRL equals</label>
+          <input id="brlRate" inputmode="decimal" type="number" step="0.0001">
+        </section>
+
+        <section class="panel">
+          <h2>Income sources</h2>
+          <div class="add-line">
+            <input id="newIncomeSource" placeholder="New source">
+            <button data-add-list="income">Add</button>
+          </div>
+          <div id="incomeSourceList" class="editable-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Expense categories</h2>
+          <div class="add-line">
+            <input id="newExpenseCategory" placeholder="New category">
+            <button data-add-list="expense">Add</button>
+          </div>
+          <div id="expenseCategoryList" class="editable-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Category colors</h2>
+          <div id="categoryColorList" class="color-key"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Payment methods</h2>
+          <div class="add-line">
+            <input id="newPaymentMethod" placeholder="New payment method">
+            <button data-add-list="payment">Add</button>
+          </div>
+          <div id="paymentMethodList" class="editable-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Data</h2>
+          <button id="exportCsv">Export CSV</button>
+          <button id="exportBackup">Export backup</button>
+          <label class="file-label">
+            Import backup
+            <input id="importBackup" type="file" accept="application/json">
+          </label>
+        </section>
+      </section>
+
+      <nav class="tabs">
+        <button class="active" data-tab="homeScreen">Home<span>Home</span></button>
+        <button data-tab="transactionsScreen">Month<span>Month</span></button>
+        <button data-tab="reportsScreen">Rpt<span>Reports</span></button>
+        <button data-tab="settingsScreen">Set<span>Settings</span></button>
+      </nav>
+    </main>
+
+    <dialog id="transactionDialog">
+      <form method="dialog" id="transactionForm">
+        <header class="dialog-header">
+          <h2 id="formTitle">Add Income</h2>
+          <button type="button" id="closeDialog" aria-label="Close">x</button>
+        </header>
+
+        <input type="hidden" id="editingId">
+        <input type="hidden" id="transactionKind">
+
+        <label>Amount</label>
+        <input id="amountInput" type="number" inputmode="decimal" step="0.01" required>
+
+        <label>Currency</label>
+        <select id="currencyInput">
+          <option value="CAD">CAD</option>
+          <option value="USD">USD</option>
+          <option value="BRL">BRL</option>
+        </select>
+
+        <label>Country account</label>
+        <select id="transactionCountryInput">
+          <option value="canada">Canada</option>
+          <option value="brazil">Brasil</option>
+        </select>
+
+        <label>Date</label>
+        <input id="dateInput" type="date" required>
+
+        <label id="categoryLabel">Source</label>
+        <select id="categoryInput"></select>
+
+        <label id="paymentMethodLabel">Payment method</label>
+        <select id="paymentMethodInput"></select>
+
+        <label>Exchange rate used</label>
+        <div class="rate-line">
+          <span id="rateFrom">1 CAD =</span>
+          <input id="rateInput" type="number" inputmode="decimal" step="0.0001" required>
+          <span id="rateTo">CAD</span>
+        </div>
+
+        <label>Optional note</label>
+        <textarea id="noteInput" rows="3"></textarea>
+
+        <button class="primary save" type="submit">Save</button>
+      </form>
+    </dialog>
+
+    <dialog id="transferDialog">
+      <form method="dialog" id="transferForm">
+        <header class="dialog-header">
+          <h2 id="transferFormTitle">Transfer Money</h2>
+          <button type="button" id="closeTransferDialog" aria-label="Close">x</button>
+        </header>
+
+        <input type="hidden" id="transferEditingId">
+
+        <label>From</label>
+        <select id="transferFromAccount">
+          <option value="canada">Canada</option>
+          <option value="brazil">Brasil</option>
+        </select>
+
+        <label>Amount sent</label>
+        <input id="transferSentAmount" type="number" inputmode="decimal" step="0.01" required>
+
+        <label>Currency sent</label>
+        <select id="transferSentCurrency">
+          <option value="CAD">CAD</option>
+          <option value="BRL">BRL</option>
+          <option value="USD">USD</option>
+        </select>
+
+        <label>To</label>
+        <select id="transferToAccount">
+          <option value="brazil">Brasil</option>
+          <option value="canada">Canada</option>
+        </select>
+
+        <label>Amount received</label>
+        <input id="transferReceivedAmount" type="number" inputmode="decimal" step="0.01" required>
+
+        <label>Currency received</label>
+        <select id="transferReceivedCurrency">
+          <option value="BRL">BRL</option>
+          <option value="CAD">CAD</option>
+          <option value="USD">USD</option>
+        </select>
+
+        <label>Transfer fee</label>
+        <input id="transferFee" type="number" inputmode="decimal" step="0.01" value="0">
+
+        <label>Fee currency</label>
+        <select id="transferFeeCurrency">
+          <option value="CAD">CAD</option>
+          <option value="BRL">BRL</option>
+          <option value="USD">USD</option>
+        </select>
+
+        <label>Date</label>
+        <input id="transferDate" type="date" required>
+
+        <label>Optional note</label>
+        <textarea id="transferNote" rows="3"></textarea>
+
+        <button class="primary save" type="submit">Save</button>
+      </form>
+    </dialog>
+
+    <dialog id="investmentDialog">
+      <form method="dialog" id="investmentForm">
+        <header class="dialog-header">
+          <h2 id="investmentFormTitle">Add Investment</h2>
+          <button type="button" id="closeInvestmentDialog" aria-label="Close">x</button>
+        </header>
+
+        <input type="hidden" id="investmentEditingId">
+
+        <label>Name</label>
+        <input id="investmentName" placeholder="Stock, fund, crypto, savings" required>
+
+        <label>Amount</label>
+        <input id="investmentAmount" type="number" inputmode="decimal" step="0.01" required>
+
+        <label>Current value</label>
+        <input id="investmentCurrentValue" type="number" inputmode="decimal" step="0.01">
+
+        <label>Currency</label>
+        <select id="investmentCurrencyInput">
+          <option value="CAD">CAD</option>
+          <option value="USD">USD</option>
+          <option value="BRL">BRL</option>
+        </select>
+
+        <label>Investment tab</label>
+        <select id="investmentCountryInput">
+          <option value="canada">Canada</option>
+          <option value="brazil">Brasil</option>
+        </select>
+
+        <label class="check-row">
+          <input id="investmentDeductInput" type="checkbox" checked>
+          <span>Take this money out of that country tab</span>
+        </label>
+
+        <label>Date</label>
+        <input id="investmentDate" type="date" required>
+
+        <label>Optional note</label>
+        <textarea id="investmentNote" rows="3"></textarea>
+
+        <button class="primary save" type="submit">Save</button>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>
