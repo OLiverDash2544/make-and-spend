@@ -359,16 +359,22 @@ label {
   gap: 8px;
 }
 
-.color-key div {
+.color-key h3 {
+  margin: 12px 0 2px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.color-key .color-row {
   display: grid;
-  grid-template-columns: 18px 1fr auto;
+  grid-template-columns: 18px minmax(0, 1fr) 42px auto 58px;
   align-items: center;
   gap: 10px;
   padding: 8px 0;
   border-bottom: 1px solid var(--line);
 }
 
-.color-key div:last-child {
+.color-key .color-row:last-child {
   border-bottom: 0;
 }
 
@@ -384,6 +390,20 @@ label {
 
 .color-key strong {
   color: var(--muted);
+  font-size: 12px;
+}
+
+.color-key input[type="color"] {
+  width: 42px;
+  min-height: 34px;
+  height: 34px;
+  margin: 0;
+  padding: 2px;
+}
+
+.color-key button {
+  min-height: 34px;
+  padding: 0 8px;
   font-size: 12px;
 }
 

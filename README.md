@@ -10,7 +10,19 @@ Real account balances carry forward. Monthly income, spending, transfer fees, an
 
 The **Month** tab lets you move between months. Older months are kept in **Reports**, where Canada and Brasil have separate report sections. Canada reports stay in CAD and Brasil reports stay in BRL, without converting between them.
 
-Month and Reports include a simple colored spending bar. Each color represents a spending category, so you can quickly see what your money went to.
+Month and Reports include simple colored bars for earnings and spending. Earning colors show where money came from, and spending colors show what money went to.
+
+Settings includes editable chart colors. You can change the color for each earning source and each spending category, reset a color back to the default, and keep those choices in your local data and backup file.
+
+Default earning source colors:
+
+- Job: `#22A06B`
+- Side job: `#0A84FF`
+- Gift or present: `#FF5C8A`
+- Investment return: `#6D5DF6`
+- Rent received: `#00A6A6`
+- Refund: `#E6A700`
+- Other: `#8E8E93`
 
 Default category colors:
 

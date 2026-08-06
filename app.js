@@ -43,6 +43,27 @@ const fallbackCategoryColors = [
   "#5E5CE6"
 ];
 
+const incomeSourceColorMap = {
+  "Job": "#22A06B",
+  "Side job": "#0A84FF",
+  "Gift or present": "#FF5C8A",
+  "Investment return": "#6D5DF6",
+  "Rent received": "#00A6A6",
+  "Refund": "#E6A700",
+  "Other": "#8E8E93"
+};
+
+const fallbackIncomeSourceColors = [
+  "#34C759",
+  "#007AFF",
+  "#AF52DE",
+  "#FF9500",
+  "#00C7BE",
+  "#5856D6",
+  "#FF2D55",
+  "#A2845E"
+];
+
 const defaults = {
   mainCurrency: "CAD",
   ratesToCAD: { CAD: 1, USD: 1.36, BRL: 0.25 },
@@ -54,6 +75,7 @@ const defaults = {
   },
   theme: "light",
   incomeSources: ["Job", "Side job", "Gift or present", "Investment return", "Rent received", "Refund", "Other"],
+  incomeSourceColors: {},
   expenseCategories: [
     "Rent or housing",
     "Groceries",
@@ -76,6 +98,7 @@ const defaults = {
     "Taxes",
     "Other"
   ],
+  expenseCategoryColors: {},
   paymentMethods: ["Cash", "Debit card", "Credit card", "Bank transfer", "Other"],
   transactions: [],
   investments: [],
@@ -109,7 +132,9 @@ function normalizeState(saved) {
       brazil: { ...defaults.accountSettings.brazil, ...(saved.accountSettings?.brazil || {}) }
     },
     incomeSources: saved.incomeSources || defaults.incomeSources,
+    incomeSourceColors: { ...defaults.incomeSourceColors, ...(saved.incomeSourceColors || {}) },
     expenseCategories: saved.expenseCategories || defaults.expenseCategories,
+    expenseCategoryColors: { ...defaults.expenseCategoryColors, ...(saved.expenseCategoryColors || {}) },
     paymentMethods: saved.paymentMethods || defaults.paymentMethods,
     transactions: saved.transactions || [],
     investments: saved.investments || [],
@@ -170,10 +195,31 @@ function countryCurrency(countryId) {
 }
 
 function colorForCategory(category) {
+  if (state.expenseCategoryColors?.[category]) return state.expenseCategoryColors[category];
   if (categoryColorMap[category]) return categoryColorMap[category];
   let total = 0;
   for (const character of category) total += character.charCodeAt(0);
   return fallbackCategoryColors[total % fallbackCategoryColors.length];
+}
+
+function colorForIncomeSource(source) {
+  if (state.incomeSourceColors?.[source]) return state.incomeSourceColors[source];
+  if (incomeSourceColorMap[source]) return incomeSourceColorMap[source];
+  let total = 0;
+  for (const character of source) total += character.charCodeAt(0);
+  return fallbackIncomeSourceColors[total % fallbackIncomeSourceColors.length];
+}
+
+function incomeBySource(transactions, currency) {
+  const totals = {};
+  transactions
+    .filter((transaction) => transaction.kind === "income")
+    .forEach((transaction) => {
+      totals[transaction.category] = (totals[transaction.category] || 0) + Math.abs(amountInCurrency(transaction, currency));
+    });
+  return Object.entries(totals)
+    .map(([name, amount]) => ({ name, amount }))
+    .sort((a, b) => b.amount - a.amount);
 }
 
 function spendingByCategory(transactions, currency) {
@@ -188,15 +234,15 @@ function spendingByCategory(transactions, currency) {
     .sort((a, b) => b.amount - a.amount);
 }
 
-function spendingStackTemplate(items, currency) {
+function stackTemplate(items, currency, options) {
   const total = items.reduce((sum, item) => sum + item.amount, 0);
-  if (!total) return `<p class="eyebrow">No spending chart yet</p>`;
+  if (!total) return `<p class="eyebrow">${options.emptyText}</p>`;
 
   return `
-    <div class="stacked-bar" aria-label="Spending by category">
+    <div class="stacked-bar" aria-label="${escapeAttr(options.label)}">
       ${items.map((item) => `
         <span
-          style="width:${Math.max(3, (item.amount / total) * 100)}%; background:${colorForCategory(item.name)}"
+          style="width:${Math.max(3, (item.amount / total) * 100)}%; background:${options.colorForItem(item.name)}"
           title="${escapeAttr(item.name)}"
         ></span>
       `).join("")}
@@ -204,13 +250,29 @@ function spendingStackTemplate(items, currency) {
     <div class="category-legend">
       ${items.map((item) => `
         <div>
-          <i style="background:${colorForCategory(item.name)}"></i>
+          <i style="background:${options.colorForItem(item.name)}"></i>
           <span>${escapeHtml(item.name)}</span>
           <strong>${money(item.amount, currency)}</strong>
         </div>
       `).join("")}
     </div>
   `;
+}
+
+function spendingStackTemplate(items, currency) {
+  return stackTemplate(items, currency, {
+    label: "Spending by category",
+    emptyText: "No spending chart yet",
+    colorForItem: colorForCategory
+  });
+}
+
+function earningStackTemplate(items, currency) {
+  return stackTemplate(items, currency, {
+    label: "Earnings by source",
+    emptyText: "No earning chart yet",
+    colorForItem: colorForIncomeSource
+  });
 }
 
 function rateToMain(currency) {
@@ -314,6 +376,10 @@ function accountCardTemplate(country, selectedMonthKey) {
         <span>Income this month</span>
         <strong class="green">${money(summary.income, currency)}</strong>
       </div>
+      <div class="spending-stack-wrap earning-stack-wrap">
+        <span class="eyebrow">Earnings by source</span>
+        ${earningStackTemplate(summary.earningSources, currency)}
+      </div>
       <div class="metric">
         <span>Expenses this month</span>
         <strong class="red">${money(summary.expenses, currency)}</strong>
@@ -364,6 +430,7 @@ function accountSummary(countryId, selectedMonthKey) {
     .filter((transaction) => transaction.kind === "expense")
     .reduce((sum, transaction) => sum + Math.abs(amountInCurrency(transaction, currency)), 0);
   const investments = monthInvestments.reduce((sum, investment) => sum + investmentInCurrency(investment, currency), 0);
+  const earningSources = incomeBySource(monthTransactions, currency);
   const spendingCategories = spendingByCategory(monthTransactions, currency);
   const transferFees = monthSentTransfers.reduce((sum, transfer) => sum + convertedAmount(transfer.fee || 0, transfer.feeCurrency || transfer.sentCurrency, currency), 0);
   const transferInMonth = monthReceivedTransfers.reduce((sum, transfer) => sum + convertedAmount(transfer.receivedAmount, transfer.receivedCurrency, currency), 0);
@@ -377,6 +444,7 @@ function accountSummary(countryId, selectedMonthKey) {
     transferFees,
     transfersNet: transferInMonth - transferOutMonth - transferFees,
     monthRemaining: income - expenses - investments - transferFees,
+    earningSources,
     spendingCategories,
     monthTransactions,
     monthInvestments
@@ -501,7 +569,10 @@ function buildPeriodReports(type, countryId) {
     if (!reports.has(key)) reports.set(key, emptyReport(key, type, currency));
     const report = reports.get(key);
     const amount = Math.abs(amountInCurrency(transaction, currency));
-    if (transaction.kind === "income") report.income += amount;
+    if (transaction.kind === "income") {
+      report.income += amount;
+      report.earningSources[transaction.category] = (report.earningSources[transaction.category] || 0) + amount;
+    }
     if (transaction.kind === "expense") {
       report.expenses += amount;
       report.spendingCategories[transaction.category] = (report.spendingCategories[transaction.category] || 0) + amount;
@@ -554,6 +625,7 @@ function emptyReport(key, type, currency) {
     investmentItems: [],
     transferFees: 0,
     transfers: [],
+    earningSources: {},
     spendingCategories: {}
   };
 }
@@ -572,6 +644,7 @@ function monthReportTemplate(report) {
         <strong>${money(report.remaining, report.currency)}</strong>
       </summary>
       ${reportMetricsTemplate(report)}
+      ${reportEarningTemplate(report)}
       ${reportSpendingTemplate(report)}
       <div class="report-records">
         ${records || `<p class="eyebrow">No records</p>`}
@@ -588,6 +661,7 @@ function yearReportTemplate(report) {
         <strong>${money(report.remaining, report.currency)}</strong>
       </div>
       ${reportMetricsTemplate(report)}
+      ${reportEarningTemplate(report)}
       ${reportSpendingTemplate(report)}
     </article>
   `;
@@ -603,6 +677,18 @@ function reportMetricsTemplate(report) {
       <div><span>Transfer out</span><strong>${money(report.transferOut, report.currency)}</strong></div>
       <div><span>Fees</span><strong>${money(report.transferFees, report.currency)}</strong></div>
       <div><span>Left</span><strong>${money(report.remaining, report.currency)}</strong></div>
+    </div>
+  `;
+}
+
+function reportEarningTemplate(report) {
+  const items = Object.entries(report.earningSources)
+    .map(([name, amount]) => ({ name, amount }))
+    .sort((a, b) => b.amount - a.amount);
+  return `
+    <div class="report-spending report-earning">
+      <span class="eyebrow">Earnings by source</span>
+      ${earningStackTemplate(items, report.currency)}
     </div>
   `;
 }
@@ -678,13 +764,43 @@ function renderSettings() {
 }
 
 function renderCategoryColorList() {
-  $("#categoryColorList").innerHTML = state.expenseCategories.map((category) => `
-    <div>
-      <i style="background:${colorForCategory(category)}"></i>
-      <span>${escapeHtml(category)}</span>
-      <strong>${colorForCategory(category)}</strong>
+  const incomeColors = state.incomeSources.map((source) => `
+    <div class="color-row">
+      <i style="background:${colorForIncomeSource(source)}"></i>
+      <span>${escapeHtml(source)}</span>
+      <input
+        aria-label="Color for ${escapeAttr(source)}"
+        data-color-type="income"
+        data-color-name="${escapeAttr(source)}"
+        type="color"
+        value="${colorForIncomeSource(source)}"
+      >
+      <strong>${colorForIncomeSource(source)}</strong>
+      <button data-reset-color="income" data-color-name="${escapeAttr(source)}">Reset</button>
     </div>
   `).join("");
+  const expenseColors = state.expenseCategories.map((category) => `
+    <div class="color-row">
+      <i style="background:${colorForCategory(category)}"></i>
+      <span>${escapeHtml(category)}</span>
+      <input
+        aria-label="Color for ${escapeAttr(category)}"
+        data-color-type="expense"
+        data-color-name="${escapeAttr(category)}"
+        type="color"
+        value="${colorForCategory(category)}"
+      >
+      <strong>${colorForCategory(category)}</strong>
+      <button data-reset-color="expense" data-color-name="${escapeAttr(category)}">Reset</button>
+    </div>
+  `).join("");
+
+  $("#categoryColorList").innerHTML = `
+    <h3>Earning source colors</h3>
+    ${incomeColors}
+    <h3>Spending category colors</h3>
+    ${expenseColors}
+  `;
 }
 
 function renderEditableList(id, items, type) {
@@ -859,6 +975,7 @@ function renameListItem(type, oldName) {
   if (!name) return;
   const index = list.indexOf(oldName);
   if (index >= 0) list[index] = name;
+  moveCustomColor(type, oldName, name);
   const kind = type === "income" ? "income" : type === "expense" ? "expense" : "";
   state.transactions.forEach((transaction) => {
     if (transaction.kind === kind && transaction.category === oldName) transaction.category = name;
@@ -872,6 +989,37 @@ function deleteListItem(type, name) {
   const list = type === "income" ? state.incomeSources : type === "expense" ? state.expenseCategories : state.paymentMethods;
   const index = list.indexOf(name);
   if (index >= 0) list.splice(index, 1);
+  removeCustomColor(type, name);
+  render();
+}
+
+function colorStoreForType(type) {
+  if (type === "income") return state.incomeSourceColors;
+  if (type === "expense") return state.expenseCategoryColors;
+  return null;
+}
+
+function moveCustomColor(type, oldName, newName) {
+  const store = colorStoreForType(type);
+  if (!store || !store[oldName]) return;
+  store[newName] = store[oldName];
+  delete store[oldName];
+}
+
+function removeCustomColor(type, name) {
+  const store = colorStoreForType(type);
+  if (store) delete store[name];
+}
+
+function setChartColor(type, name, color) {
+  const store = colorStoreForType(type);
+  if (!store || !/^#[0-9a-f]{6}$/i.test(color)) return;
+  store[name] = color.toUpperCase();
+  render();
+}
+
+function resetChartColor(type, name) {
+  removeCustomColor(type, name);
   render();
 }
 
@@ -1051,6 +1199,14 @@ document.addEventListener("click", (event) => {
   if (target.dataset.addList) addListItem(target.dataset.addList);
   if (target.dataset.renameList) renameListItem(target.dataset.renameList, target.dataset.name);
   if (target.dataset.deleteList) deleteListItem(target.dataset.deleteList, target.dataset.name);
+  if (target.dataset.resetColor) resetChartColor(target.dataset.resetColor, target.dataset.colorName);
+});
+
+document.addEventListener("change", (event) => {
+  const target = event.target;
+  if (target.matches("[data-color-type]")) {
+    setChartColor(target.dataset.colorType, target.dataset.colorName, target.value);
+  }
 });
 
 $("#transactionForm").addEventListener("submit", saveTransaction);
