@@ -4,13 +4,13 @@ This is the Windows and Visual Studio Code friendly version of Make & Spend.
 
 It runs as a simple iPhone-sized web app and stores data locally in the browser. It works offline after the first load if served from a local web server.
 
-The app uses four simple tabs: Home, Month, Reports, and Settings. Canada and Brasil appear as account cards inside Home and Month. Canada records CAD, and Brasil records BRL.
+The app uses three simple tabs: Home, Reports, and Settings. Canada and Brasil appear as account cards inside Home. Canada records CAD, and Brasil records BRL.
 
 Real account balances carry forward. Monthly income, spending, transfer fees, and investment totals reset for each month, but money left over stays in the account balance. You can set starting balances in Settings.
 
-The **Month** tab lets you move between months. Older months are kept in **Reports**, where Canada and Brasil have separate report sections. Canada reports stay in CAD and Brasil reports stay in BRL, without converting between them.
+The **Reports** tab keeps month and year records, with separate report sections for Canada and Brasil. Canada reports stay in CAD and Brasil reports stay in BRL, without converting between them.
 
-Month and Reports include simple colored bars for earnings and spending. Earning colors show where money came from, and spending colors show what money went to.
+Home and Reports include simple colored bars for earnings and spending. Earning colors show where money came from, and spending colors show what money went to.
 
 Settings includes editable chart colors. You can change the color for each earning source and each spending category, reset a color back to the default, and keep those choices in your local data and backup file.
 
