@@ -690,6 +690,18 @@ form {
   font-size: 13px;
 }
 
+.settings-divider {
+  height: 1px;
+  margin: 14px 0;
+  background: var(--line);
+}
+
+.settings-subtitle {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 16px;
+}
+
 .status-text {
   margin: 0 0 12px;
   color: var(--muted);
