@@ -9,6 +9,9 @@ const countries = [
   { id: "brazil", name: "Brasil", currency: "BRL", dashboard: "brazilDashboard" }
 ];
 
+const defaultSupabaseUrl = "https://wzsefkygcxvulukzszfw.supabase.co";
+const defaultSupabasePublishableKey = "sb_publishable_y8x4Ty0_9mRjrTpEA7cyzA_ULsJZHhI";
+
 const categoryColorMap = {
   "Rent or housing": "#6D5DF6",
   "Groceries": "#22A06B",
@@ -106,6 +109,16 @@ const defaults = {
 };
 
 let state = loadState();
+let syncConfig = loadSyncConfig();
+let cloudSaveTimer = null;
+let cloudState = {
+  client: null,
+  user: null,
+  enabled: localStorage.getItem("makeSpendCloudEnabled") === "true",
+  lastUpdatedAt: localStorage.getItem("makeSpendCloudUpdatedAt") || "",
+  loading: false,
+  saving: false
+};
 let filters = { kind: "all", category: "all", currency: "all", search: "" };
 let selectedMonth = monthKey(today());
 
@@ -118,6 +131,22 @@ function loadState() {
   } catch {
     return normalizeState({});
   }
+}
+
+function loadSyncConfig() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("makeSpendSyncConfig") || "{}");
+    return {
+      supabaseUrl: saved.supabaseUrl || defaultSupabaseUrl,
+      publishableKey: saved.publishableKey || defaultSupabasePublishableKey
+    };
+  } catch {
+    return { supabaseUrl: defaultSupabaseUrl, publishableKey: defaultSupabasePublishableKey };
+  }
+}
+
+function saveSyncConfig() {
+  localStorage.setItem("makeSpendSyncConfig", JSON.stringify(syncConfig));
 }
 
 function normalizeState(saved) {
@@ -144,6 +173,7 @@ function normalizeState(saved) {
 
 function saveState() {
   localStorage.setItem("makeSpendData", JSON.stringify(state));
+  queueCloudSave();
 }
 
 function money(amount, currency = state.mainCurrency) {
@@ -752,6 +782,8 @@ function renderSettings() {
   $("#mainCurrency").value = state.mainCurrency;
   $("#canadaStartingBalance").value = state.accountSettings.canada.startingBalance;
   $("#brazilStartingBalance").value = state.accountSettings.brazil.startingBalance;
+  $("#supabaseUrl").value = syncConfig.supabaseUrl;
+  $("#supabaseKey").value = syncConfig.publishableKey;
   $("#usdRate").value = state.ratesToCAD.USD;
   $("#brlRate").value = state.ratesToCAD.BRL;
   $("#rateStatus").textContent = state.ratesUpdatedAt
@@ -761,6 +793,7 @@ function renderSettings() {
   renderEditableList("expenseCategoryList", state.expenseCategories, "expense");
   renderCategoryColorList();
   renderEditableList("paymentMethodList", state.paymentMethods, "payment");
+  renderCloudStatus();
 }
 
 function renderCategoryColorList() {
@@ -1133,6 +1166,222 @@ function backupImport(file) {
   reader.readAsText(file);
 }
 
+function renderCloudStatus(message = "") {
+  const status = $("#cloudStatus");
+  if (!status) return;
+  if (message) {
+    status.textContent = message;
+    return;
+  }
+  if (!syncConfig.supabaseUrl) {
+    status.textContent = "Paste your Supabase Project URL, then save cloud settings.";
+    return;
+  }
+  if (cloudState.user) {
+    status.textContent = cloudState.enabled
+      ? `Cloud sync connected as ${cloudState.user.email || "your account"}.`
+      : `Logged in as ${cloudState.user.email || "your account"}. Choose Save or Load to start syncing.`;
+    return;
+  }
+  status.textContent = "Cloud settings saved. Sign up or log in to sync.";
+}
+
+function setCloudStatus(message) {
+  renderCloudStatus(message);
+}
+
+function saveCloudSettingsFromInputs() {
+  syncConfig.supabaseUrl = $("#supabaseUrl").value.trim().replace(/\/$/, "");
+  syncConfig.publishableKey = $("#supabaseKey").value.trim();
+  cloudState.client = null;
+  saveSyncConfig();
+  setCloudStatus("Cloud settings saved. Now sign up or log in.");
+}
+
+function getSupabaseClient() {
+  if (!syncConfig.supabaseUrl || !syncConfig.publishableKey) {
+    throw new Error("Add your Supabase Project URL and publishable key first.");
+  }
+  if (!window.supabase?.createClient) {
+    throw new Error("Supabase could not load. Check your internet connection.");
+  }
+  if (
+    !cloudState.client ||
+    cloudState.clientUrl !== syncConfig.supabaseUrl ||
+    cloudState.clientKey !== syncConfig.publishableKey
+  ) {
+    cloudState.client = window.supabase.createClient(syncConfig.supabaseUrl, syncConfig.publishableKey);
+    cloudState.clientUrl = syncConfig.supabaseUrl;
+    cloudState.clientKey = syncConfig.publishableKey;
+  }
+  return cloudState.client;
+}
+
+async function refreshCloudSession() {
+  const client = getSupabaseClient();
+  const { data, error } = await client.auth.getSession();
+  if (error) throw error;
+  cloudState.user = data.session?.user || null;
+  return cloudState.user;
+}
+
+async function signUpCloud() {
+  try {
+    saveCloudSettingsFromInputs();
+    const email = $("#syncEmail").value.trim();
+    const password = $("#syncPassword").value;
+    if (!email || !password) throw new Error("Enter your email and password first.");
+    const client = getSupabaseClient();
+    const { data, error } = await client.auth.signUp({ email, password });
+    if (error) throw error;
+    cloudState.user = data.user || data.session?.user || null;
+    setCloudStatus(data.session ? "Account created and logged in. Tap Save this device to cloud." : "Account created. Check your email if Supabase asks you to confirm it, then log in.");
+  } catch (error) {
+    setCloudStatus(error.message);
+  }
+}
+
+async function loginCloud() {
+  try {
+    saveCloudSettingsFromInputs();
+    const email = $("#syncEmail").value.trim();
+    const password = $("#syncPassword").value;
+    if (!email || !password) throw new Error("Enter your email and password first.");
+    const client = getSupabaseClient();
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    cloudState.user = data.user;
+    cloudState.enabled = localStorage.getItem("makeSpendCloudEnabled") === "true";
+    startCloudPolling();
+    setCloudStatus("Logged in. Tap Load cloud data or Save this device to cloud.");
+  } catch (error) {
+    setCloudStatus(error.message);
+  }
+}
+
+async function logoutCloud() {
+  try {
+    const client = getSupabaseClient();
+    await client.auth.signOut();
+  } catch {
+    // Local logout still matters if the browser token is already gone.
+  }
+  cloudState.user = null;
+  cloudState.enabled = false;
+  localStorage.setItem("makeSpendCloudEnabled", "false");
+  setCloudStatus("Logged out. Local data is still saved on this device.");
+}
+
+function queueCloudSave() {
+  if (!cloudState.enabled || cloudState.loading || cloudState.saving || !cloudState.user || !cloudState.client) return;
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer = setTimeout(() => {
+    saveCloudData(true);
+  }, 1200);
+}
+
+async function saveCloudData(silent = false) {
+  try {
+    const user = cloudState.user || await refreshCloudSession();
+    if (!user) throw new Error("Log in before saving to cloud.");
+    const client = getSupabaseClient();
+    cloudState.saving = true;
+    const updatedAt = new Date().toISOString();
+    const { error } = await client
+      .from("user_app_data")
+      .upsert({ user_id: user.id, data: state, updated_at: updatedAt }, { onConflict: "user_id" });
+    if (error) throw error;
+    cloudState.enabled = true;
+    cloudState.lastUpdatedAt = updatedAt;
+    localStorage.setItem("makeSpendCloudEnabled", "true");
+    localStorage.setItem("makeSpendCloudUpdatedAt", updatedAt);
+    if (!silent) setCloudStatus("Saved this device data to cloud.");
+    startCloudPolling();
+  } catch (error) {
+    if (!silent) setCloudStatus(error.message);
+  } finally {
+    cloudState.saving = false;
+  }
+}
+
+async function loadCloudData(silent = false) {
+  try {
+    const user = cloudState.user || await refreshCloudSession();
+    if (!user) throw new Error("Log in before loading cloud data.");
+    const client = getSupabaseClient();
+    const { data, error } = await client
+      .from("user_app_data")
+      .select("data, updated_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data?.data) {
+      if (!silent) setCloudStatus("No cloud data yet. Tap Save this device to cloud first.");
+      return;
+    }
+    cloudState.loading = true;
+    state = normalizeState(data.data);
+    cloudState.enabled = true;
+    cloudState.lastUpdatedAt = data.updated_at || new Date().toISOString();
+    localStorage.setItem("makeSpendCloudEnabled", "true");
+    localStorage.setItem("makeSpendCloudUpdatedAt", cloudState.lastUpdatedAt);
+    render();
+    if (!silent) setCloudStatus("Loaded cloud data onto this device.");
+    startCloudPolling();
+  } catch (error) {
+    if (!silent) setCloudStatus(error.message);
+  } finally {
+    cloudState.loading = false;
+  }
+}
+
+async function pullLatestCloudData() {
+  if (!cloudState.enabled || cloudState.saving || cloudState.loading) return;
+  try {
+    const user = cloudState.user || await refreshCloudSession();
+    if (!user) return;
+    const client = getSupabaseClient();
+    const { data, error } = await client
+      .from("user_app_data")
+      .select("data, updated_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (error || !data?.data || !data.updated_at) return;
+    if (!cloudState.lastUpdatedAt || new Date(data.updated_at) > new Date(cloudState.lastUpdatedAt)) {
+      cloudState.loading = true;
+      state = normalizeState(data.data);
+      cloudState.lastUpdatedAt = data.updated_at;
+      localStorage.setItem("makeSpendCloudUpdatedAt", data.updated_at);
+      render();
+      setCloudStatus("Loaded new cloud data from your other device.");
+    }
+  } finally {
+    cloudState.loading = false;
+  }
+}
+
+function startCloudPolling() {
+  if (cloudState.pollTimer) return;
+  cloudState.pollTimer = setInterval(pullLatestCloudData, 30000);
+}
+
+async function initCloud() {
+  try {
+    if (!syncConfig.supabaseUrl) {
+      renderCloudStatus();
+      return;
+    }
+    await refreshCloudSession();
+    if (cloudState.user) {
+      startCloudPolling();
+      if (cloudState.enabled) pullLatestCloudData();
+    }
+    renderCloudStatus();
+  } catch (error) {
+    setCloudStatus(error.message);
+  }
+}
+
 function formatDate(value) {
   return new Date(value + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
@@ -1295,6 +1544,12 @@ $("#themeButton").addEventListener("click", () => {
 $("#exportCsv").addEventListener("click", csvExport);
 $("#exportBackup").addEventListener("click", backupExport);
 $("#refreshRates").addEventListener("click", refreshRates);
+$("#saveCloudSettings").addEventListener("click", saveCloudSettingsFromInputs);
+$("#signUpCloud").addEventListener("click", signUpCloud);
+$("#loginCloud").addEventListener("click", loginCloud);
+$("#logoutCloud").addEventListener("click", logoutCloud);
+$("#saveCloudData").addEventListener("click", () => saveCloudData(false));
+$("#loadCloudData").addEventListener("click", () => loadCloudData(false));
 $("#importBackup").addEventListener("change", (event) => {
   if (event.target.files[0]) backupImport(event.target.files[0]);
 });
@@ -1304,3 +1559,4 @@ if ("serviceWorker" in navigator) {
 }
 
 render();
+initCloud();

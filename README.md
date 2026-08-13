@@ -55,6 +55,49 @@ Settings includes an **Update online rates** button. It uses the public Frankfur
 
 Investments can be assigned to Canada or Brasil. By default, investment money is deducted from that country account in blue, but it is not counted as a red expense. Uncheck **Take this money out of that country tab** when the investment money came from somewhere else.
 
+## Cloud Sync
+
+Settings includes **Cloud sync** for using the same data on phone and computer with Supabase.
+
+In Supabase, create this table in the SQL Editor:
+
+```sql
+create table public.user_app_data (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.user_app_data enable row level security;
+
+create policy "Users can read their own data"
+on public.user_app_data
+for select
+to authenticated
+using ((select auth.uid()) = user_id);
+
+create policy "Users can insert their own data"
+on public.user_app_data
+for insert
+to authenticated
+with check ((select auth.uid()) = user_id);
+
+create policy "Users can update their own data"
+on public.user_app_data
+for update
+to authenticated
+using ((select auth.uid()) = user_id)
+with check ((select auth.uid()) = user_id);
+```
+
+The app is configured with this Supabase Project URL:
+
+```text
+https://wzsefkygcxvulukzszfw.supabase.co
+```
+
+Log in in Settings, then use **Save this device to cloud** or **Load cloud data**. After cloud sync is started, the app checks for newer cloud data about every 30 seconds.
+
 ## Run in VS Code on Windows
 
 1. Open this folder in VS Code:

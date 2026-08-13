@@ -184,6 +184,31 @@
         </section>
 
         <section class="panel">
+          <h2>Cloud sync</h2>
+          <p class="status-text">Use the same data on your phone and computer with your Supabase login.</p>
+          <label>Supabase project URL</label>
+          <input id="supabaseUrl" inputmode="url" placeholder="https://your-project.supabase.co">
+          <label>Publishable key</label>
+          <input id="supabaseKey" autocomplete="off">
+          <button id="saveCloudSettings" class="rate-refresh" type="button">Save cloud settings</button>
+
+          <label>Email</label>
+          <input id="syncEmail" type="email" autocomplete="email" placeholder="you@example.com">
+          <label>Password</label>
+          <input id="syncPassword" type="password" autocomplete="current-password">
+          <div class="cloud-actions">
+            <button id="signUpCloud" type="button">Sign up</button>
+            <button id="loginCloud" type="button">Log in</button>
+            <button id="logoutCloud" type="button">Log out</button>
+          </div>
+          <div class="cloud-actions">
+            <button id="saveCloudData" type="button">Save this device to cloud</button>
+            <button id="loadCloudData" type="button">Load cloud data</button>
+          </div>
+          <p class="status-text" id="cloudStatus">Cloud sync is not connected yet.</p>
+        </section>
+
+        <section class="panel">
           <h2>Data</h2>
           <button id="exportCsv">Export CSV</button>
           <button id="exportBackup">Export backup</button>
@@ -357,6 +382,7 @@
       </form>
     </dialog>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="app.js"></script>
   </body>
 </html>
