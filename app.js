@@ -185,6 +185,24 @@ function money(amount, currency = state.mainCurrency) {
   return `${numericAmount < 0 ? "-" : ""}${currencies[currency].symbol}${value} ${currency}`;
 }
 
+function decimalValue(value) {
+  const text = String(value ?? "").trim().replace(/\s/g, "");
+  if (!text) return 0;
+  const lastComma = text.lastIndexOf(",");
+  const lastDot = text.lastIndexOf(".");
+  let normalized = text;
+
+  if (lastComma >= 0 && lastDot >= 0) {
+    const decimalSeparator = lastComma > lastDot ? "," : ".";
+    const thousandsSeparator = decimalSeparator === "," ? "." : ",";
+    normalized = text.replaceAll(thousandsSeparator, "").replace(decimalSeparator, ".");
+  } else {
+    normalized = text.replace(",", ".");
+  }
+
+  return Number(normalized.replace(/[^0-9.-]/g, "")) || 0;
+}
+
 function amountInCurrency(transaction, targetCurrency) {
   const sign = transaction.kind === "income" ? 1 : -1;
   if (transaction.currency === targetCurrency) return Number(transaction.amount) * sign;
@@ -885,12 +903,12 @@ function saveTransaction(event) {
   const id = $("#editingId").value || crypto.randomUUID();
   const kind = $("#transactionKind").value;
   const currency = $("#currencyInput").value;
-  const rateToSelectedMain = Number($("#rateInput").value);
+  const rateToSelectedMain = decimalValue($("#rateInput").value);
   const exchangeRateToCAD = rateToSelectedMain * Number(state.ratesToCAD[state.mainCurrency]);
   const transaction = {
     id,
     kind,
-    amount: Number($("#amountInput").value),
+    amount: decimalValue($("#amountInput").value),
     currency,
     country: $("#transactionCountryInput").value,
     date: $("#dateInput").value,
@@ -928,11 +946,13 @@ function openInvestmentForm(investment = null, countryOverride = null) {
 function saveInvestment(event) {
   event.preventDefault();
   const id = $("#investmentEditingId").value || crypto.randomUUID();
+  const amount = decimalValue($("#investmentAmount").value);
+  const currentValue = decimalValue($("#investmentCurrentValue").value) || amount;
   const investment = {
     id,
     name: $("#investmentName").value.trim(),
-    amount: Number($("#investmentAmount").value),
-    currentValue: Number($("#investmentCurrentValue").value) || Number($("#investmentAmount").value),
+    amount,
+    currentValue,
     currency: $("#investmentCurrencyInput").value,
     country: $("#investmentCountryInput").value,
     deductFromCountry: $("#investmentDeductInput").checked,
@@ -973,11 +993,11 @@ function saveTransfer(event) {
     id,
     fromAccount: $("#transferFromAccount").value,
     toAccount: $("#transferToAccount").value,
-    sentAmount: Number($("#transferSentAmount").value),
+    sentAmount: decimalValue($("#transferSentAmount").value),
     sentCurrency: $("#transferSentCurrency").value,
-    receivedAmount: Number($("#transferReceivedAmount").value),
+    receivedAmount: decimalValue($("#transferReceivedAmount").value),
     receivedCurrency: $("#transferReceivedCurrency").value,
-    fee: Number($("#transferFee").value) || 0,
+    fee: decimalValue($("#transferFee").value),
     feeCurrency: $("#transferFeeCurrency").value,
     date: $("#transferDate").value,
     note: $("#transferNote").value.trim()
@@ -1518,21 +1538,21 @@ $("#mainCurrency").addEventListener("change", (event) => {
   render();
 });
 $("#canadaStartingBalance").addEventListener("change", (event) => {
-  state.accountSettings.canada.startingBalance = Number(event.target.value) || 0;
+  state.accountSettings.canada.startingBalance = decimalValue(event.target.value);
   render();
 });
 $("#brazilStartingBalance").addEventListener("change", (event) => {
-  state.accountSettings.brazil.startingBalance = Number(event.target.value) || 0;
+  state.accountSettings.brazil.startingBalance = decimalValue(event.target.value);
   render();
 });
 $("#usdRate").addEventListener("change", (event) => {
-  state.ratesToCAD.USD = Number(event.target.value) || state.ratesToCAD.USD;
+  state.ratesToCAD.USD = decimalValue(event.target.value) || state.ratesToCAD.USD;
   state.ratesSource = "Manual";
   state.ratesUpdatedAt = "";
   render();
 });
 $("#brlRate").addEventListener("change", (event) => {
-  state.ratesToCAD.BRL = Number(event.target.value) || state.ratesToCAD.BRL;
+  state.ratesToCAD.BRL = decimalValue(event.target.value) || state.ratesToCAD.BRL;
   state.ratesSource = "Manual";
   state.ratesUpdatedAt = "";
   render();

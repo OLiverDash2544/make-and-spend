@@ -10,6 +10,8 @@ Real account balances carry forward. Monthly income, spending, transfer fees, an
 
 The **Reports** tab keeps month and year records, with separate report sections for Canada and Brasil. Canada reports stay in CAD and Brasil reports stay in BRL, without converting between them.
 
+Amount and rate fields accept either a dot or comma for cents, so `12.50` and `12,50` both save as twelve dollars and fifty cents.
+
 Home and Reports include simple colored bars for earnings and spending. Earning colors show where money came from, and spending colors show what money went to.
 
 Settings includes editable chart colors. You can change the color for each earning source and each spending category, reset a color back to the default, and keep those choices in your local data and backup file.
