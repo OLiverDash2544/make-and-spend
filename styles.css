@@ -2,23 +2,40 @@
   color-scheme: light;
   --bg: #f2f2f7;
   --panel: #ffffff;
+  --panel-soft: #f8f8fb;
+  --field: #ffffff;
   --text: #111111;
   --muted: #6b7280;
   --line: #d7d7dc;
   --blue: #007aff;
   --green: #24a148;
   --red: #d70015;
+  --gray-action: #6b7280;
+  --button: #e5e5ea;
+  --button-text: #111111;
+  --tab-bg: rgba(255, 255, 255, 0.92);
+  --dialog-backdrop: rgba(0, 0, 0, 0.45);
   --shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
 
 body.dark {
   color-scheme: dark;
-  --bg: #000000;
-  --panel: #1c1c1e;
-  --text: #f5f5f7;
-  --muted: #a1a1aa;
-  --line: #38383a;
-  --shadow: none;
+  --bg: #0a0b0f;
+  --panel: #17181d;
+  --panel-soft: #202129;
+  --field: #101116;
+  --text: #f7f7fb;
+  --muted: #b5b6c2;
+  --line: #30323b;
+  --blue: #64a8ff;
+  --green: #4ade80;
+  --red: #ff6b7a;
+  --gray-action: #8b92a3;
+  --button: #2a2c35;
+  --button-text: #f7f7fb;
+  --tab-bg: rgba(23, 24, 29, 0.88);
+  --dialog-backdrop: rgba(0, 0, 0, 0.68);
+  --shadow: 0 18px 46px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -33,6 +50,14 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
 }
 
+body.dialog-open {
+  position: fixed;
+  right: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
 button,
 input,
 select,
@@ -44,9 +69,17 @@ button {
   min-height: 44px;
   border: 0;
   border-radius: 8px;
-  background: #e5e5ea;
-  color: var(--text);
+  background: var(--button);
+  color: var(--button-text);
   font-weight: 700;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--blue) 45%, transparent);
+  outline-offset: 2px;
 }
 
 .app-shell {
@@ -104,6 +137,7 @@ h2 {
 .panel {
   margin-bottom: 14px;
   padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
   border-radius: 8px;
   background: var(--panel);
   box-shadow: var(--shadow);
@@ -147,6 +181,11 @@ label {
   color: white;
 }
 
+body.dark .primary,
+body.dark .investment-choice strong {
+  color: #071018;
+}
+
 .income {
   background: var(--green);
 }
@@ -160,7 +199,7 @@ label {
 }
 
 .transfer {
-  background: #6b7280;
+  background: var(--gray-action);
 }
 
 .home-grid {
@@ -169,6 +208,44 @@ label {
 }
 
 .account-card h2 {
+  margin-bottom: 0;
+}
+
+.account-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.account-card-head p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.mini-toggle {
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text);
+  font-size: 13px;
+  flex: 0 0 auto;
+}
+
+.account-card-collapsed {
+  padding-bottom: 16px;
+}
+
+.account-card-collapsed .small-balance {
+  margin-bottom: 0;
+}
+
+.report-section-collapsed .metric {
   margin-bottom: 0;
 }
 
@@ -261,7 +338,7 @@ label {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: color-mix(in srgb, var(--panel) 92%, var(--blue));
+  background: color-mix(in srgb, var(--panel) 88%, var(--blue));
 }
 
 .report-card summary,
@@ -292,12 +369,17 @@ label {
   gap: 3px;
   padding: 10px;
   border-radius: 8px;
-  background: var(--panel);
+  background: var(--panel-soft);
 }
 
 .report-metrics span {
   color: var(--muted);
   font-size: 12px;
+  font-weight: 800;
+}
+
+.report-metrics small {
+  font-size: 11px;
   font-weight: 800;
 }
 
@@ -474,7 +556,7 @@ textarea {
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--panel);
+  background: var(--field);
   color: var(--text);
 }
 
@@ -495,17 +577,25 @@ input[type="number"]::-webkit-inner-spin-button {
   gap: 4px;
   padding: 4px;
   border-radius: 8px;
-  background: var(--line);
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
   margin-bottom: 12px;
+}
+
+.wide-segmented {
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .segmented button {
   min-height: 38px;
   background: transparent;
+  padding: 0 4px;
+  font-size: 12px;
 }
 
 .segmented .selected {
   background: var(--panel);
+  color: var(--blue);
 }
 
 .transaction {
@@ -515,6 +605,7 @@ input[type="number"]::-webkit-inner-spin-button {
   margin-bottom: 10px;
   padding: 14px;
   border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
   background: var(--panel);
 }
 
@@ -540,6 +631,118 @@ input[type="number"]::-webkit-inner-spin-button {
   min-height: 40px;
 }
 
+.recurring-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.helper-text {
+  margin: -4px 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.currency-presets {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.currency-presets button {
+  min-height: 48px;
+  padding: 10px;
+  background: color-mix(in srgb, var(--blue) 12%, var(--panel-soft));
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--blue) 30%, var(--line));
+}
+
+.currency-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.currency-form input {
+  margin-bottom: 6px;
+}
+
+.currency-form button {
+  grid-column: 1 / -1;
+}
+
+.currency-add-status {
+  min-height: 20px;
+  margin: 8px 0 4px;
+}
+
+.currency-add-status.ok {
+  color: var(--green);
+}
+
+.currency-add-status.error {
+  color: var(--red);
+}
+
+.account-setting-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.account-setting-row > div,
+.account-setting-row label {
+  grid-column: 1 / -1;
+}
+
+.account-setting-row p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.account-setting-row input {
+  margin-bottom: 0;
+}
+
+.account-setting-row button,
+.exchange-rate-row button {
+  min-height: 38px;
+  padding: 0 12px;
+}
+
+.exchange-rate-row {
+  display: grid;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.exchange-rate-row input {
+  margin-bottom: 0;
+}
+
+.recurring-form input,
+.recurring-form select {
+  margin-bottom: 6px;
+}
+
+.recurring-form button {
+  grid-column: 1 / -1;
+}
+
+.recurring-row {
+  border-left: 4px solid var(--red);
+}
+
+.recurring-row .transaction-actions {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .transfer-row {
   border-left: 4px solid #6b7280;
 }
@@ -562,12 +765,12 @@ input[type="number"]::-webkit-inner-spin-button {
   bottom: 0;
   left: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   width: min(100%, 480px);
   margin: 0 auto;
   padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
-  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  background: var(--tab-bg);
   backdrop-filter: blur(18px);
 }
 
@@ -594,15 +797,19 @@ input[type="number"]::-webkit-inner-spin-button {
 dialog {
   width: min(calc(100% - 24px), 460px);
   max-height: calc(100vh - 28px);
+  overflow: auto;
   padding: 0;
   border: 0;
   border-radius: 8px;
   background: var(--panel);
   color: var(--text);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.35);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 dialog::backdrop {
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--dialog-backdrop);
 }
 
 form {
@@ -656,8 +863,8 @@ form {
   margin-top: 10px;
   padding: 14px 12px;
   border-radius: 8px;
-  background: #e5e5ea;
-  color: #111111;
+  background: var(--button);
+  color: var(--button-text);
   text-align: center;
   font-weight: 700;
 }

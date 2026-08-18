@@ -1,10 +1,47 @@
-const currencies = {
+const knownCurrencies = {
   CAD: { name: "Canadian dollar", symbol: "$" },
   USD: { name: "US dollar", symbol: "$" },
-  BRL: { name: "Brazilian real", symbol: "R$" }
+  BRL: { name: "Brazilian real", symbol: "R$" },
+  EUR: { name: "Euro", symbol: "€", tabName: "Europe" },
+  JPY: { name: "Japanese yen", symbol: "¥", tabName: "Japan" },
+  GBP: { name: "British pound", symbol: "£", tabName: "United Kingdom" },
+  MXN: { name: "Mexican peso", symbol: "$", tabName: "Mexico" },
+  ARS: { name: "Argentine peso", symbol: "$", tabName: "Argentina" },
+  CLP: { name: "Chilean peso", symbol: "$", tabName: "Chile" },
+  COP: { name: "Colombian peso", symbol: "$", tabName: "Colombia" }
 };
 
-const countries = [
+const currencyCodeAliases = {
+  US: "USD",
+  USA: "USD",
+  UNITEDSTATES: "USD",
+  AMERICA: "USD",
+  JP: "JPY",
+  JAPAN: "JPY",
+  YEN: "JPY",
+  UK: "GBP",
+  ENGLAND: "GBP",
+  POUND: "GBP",
+  EURO: "EUR",
+  EUROPE: "EUR",
+  MEXICO: "MXN",
+  MEXICAN: "MXN",
+  ARGENTINA: "ARS",
+  CHILE: "CLP",
+  COLOMBIA: "COP",
+  BRAZIL: "BRL",
+  BRASIL: "BRL",
+  CANADA: "CAD"
+};
+
+const currencyPresetCodes = ["USD", "EUR", "JPY", "GBP", "MXN", "ARS", "CLP", "COP"];
+
+const defaultCurrencies = {
+  CAD: knownCurrencies.CAD,
+  BRL: knownCurrencies.BRL
+};
+
+const defaultAccounts = [
   { id: "canada", name: "Canada", currency: "CAD", dashboard: "canadaDashboard" },
   { id: "brazil", name: "Brasil", currency: "BRL", dashboard: "brazilDashboard" }
 ];
@@ -72,6 +109,8 @@ const defaults = {
   ratesToCAD: { CAD: 1, USD: 1.36, BRL: 0.25 },
   ratesUpdatedAt: "",
   ratesSource: "Manual",
+  currencySettings: defaultCurrencies,
+  accounts: defaultAccounts,
   accountSettings: {
     canada: { startingBalance: 0 },
     brazil: { startingBalance: 0 }
@@ -105,7 +144,8 @@ const defaults = {
   paymentMethods: ["Cash", "Debit card", "Credit card", "Bank transfer", "Other"],
   transactions: [],
   investments: [],
-  transfers: []
+  transfers: [],
+  recurringBills: []
 };
 
 let state = loadState();
@@ -121,6 +161,7 @@ let cloudState = {
 };
 let filters = { kind: "all", category: "all", currency: "all", search: "" };
 let selectedMonth = monthKey(today());
+let editingRecurringBillId = "";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -150,16 +191,38 @@ function saveSyncConfig() {
 }
 
 function normalizeState(saved) {
+  const currencySettings = { ...defaultCurrencies, ...(saved.currencySettings || {}) };
+  const accounts = (saved.accounts || defaultAccounts).map((account) => ({ ...account }));
+  const accountSettings = {
+    ...defaults.accountSettings,
+    ...(saved.accountSettings || {})
+  };
+  accounts.forEach((account) => {
+    if (!accountSettings[account.id]) accountSettings[account.id] = { startingBalance: 0 };
+    if (typeof accountSettings[account.id].homeCollapsed !== "boolean") accountSettings[account.id].homeCollapsed = false;
+    if (typeof accountSettings[account.id].reportsCollapsed !== "boolean") accountSettings[account.id].reportsCollapsed = false;
+    if (!currencySettings[account.currency]) currencySettings[account.currency] = { name: account.currency, symbol: `${account.currency} ` };
+  });
+  const usedCurrencies = new Set([
+    ...accounts.map((account) => account.currency),
+    ...(saved.transactions || []).map((transaction) => transaction.currency),
+    ...(saved.investments || []).map((investment) => investment.currency),
+    ...(saved.transfers || []).flatMap((transfer) => [transfer.sentCurrency, transfer.receivedCurrency, transfer.feeCurrency].filter(Boolean)),
+    ...(saved.recurringBills || []).map((bill) => bill.currency)
+  ]);
+  Object.keys(currencySettings).forEach((code) => {
+    if (!usedCurrencies.has(code)) delete currencySettings[code];
+  });
+
   return {
     ...defaults,
     ...saved,
-    ratesToCAD: { ...defaults.ratesToCAD, ...(saved.ratesToCAD || {}) },
+    currencySettings,
+    accounts,
+    ratesToCAD: normalizeRates(currencySettings, { ...defaults.ratesToCAD, ...(saved.ratesToCAD || {}) }),
     ratesUpdatedAt: saved.ratesUpdatedAt || defaults.ratesUpdatedAt,
     ratesSource: saved.ratesSource || defaults.ratesSource,
-    accountSettings: {
-      canada: { ...defaults.accountSettings.canada, ...(saved.accountSettings?.canada || {}) },
-      brazil: { ...defaults.accountSettings.brazil, ...(saved.accountSettings?.brazil || {}) }
-    },
+    accountSettings,
     incomeSources: saved.incomeSources || defaults.incomeSources,
     incomeSourceColors: { ...defaults.incomeSourceColors, ...(saved.incomeSourceColors || {}) },
     expenseCategories: saved.expenseCategories || defaults.expenseCategories,
@@ -167,13 +230,102 @@ function normalizeState(saved) {
     paymentMethods: saved.paymentMethods || defaults.paymentMethods,
     transactions: saved.transactions || [],
     investments: saved.investments || [],
-    transfers: saved.transfers || []
+    transfers: saved.transfers || [],
+    recurringBills: saved.recurringBills || []
   };
+}
+
+function normalizeRates(currencySettings, rates) {
+  const normalized = { ...rates, CAD: 1 };
+  Object.keys(currencySettings).forEach((code) => {
+    if (!Number(normalized[code])) normalized[code] = code === "CAD" ? 1 : 1;
+  });
+  return normalized;
 }
 
 function saveState() {
   localStorage.setItem("makeSpendData", JSON.stringify(state));
   queueCloudSave();
+}
+
+let lockedScrollY = 0;
+
+function lockPageBehindDialog() {
+  if (document.body.classList.contains("dialog-open")) return;
+  lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.style.top = `-${lockedScrollY}px`;
+  document.body.classList.add("dialog-open");
+}
+
+function unlockPageBehindDialog() {
+  if ([...document.querySelectorAll("dialog")].some((dialog) => dialog.open)) return;
+  document.body.classList.remove("dialog-open");
+  document.body.style.top = "";
+  window.scrollTo(0, lockedScrollY);
+}
+
+function openDialog(dialog) {
+  lockPageBehindDialog();
+  dialog.showModal();
+}
+
+function closeDialog(dialog) {
+  dialog.close();
+  unlockPageBehindDialog();
+}
+
+function allAccounts() {
+  return (state.accounts?.length ? state.accounts : defaultAccounts).map((account) => ({
+    ...account,
+    active: account.active !== false
+  }));
+}
+
+function activeAccounts() {
+  const active = allAccounts().filter((account) => account.active !== false);
+  return active.length ? active : allAccounts().slice(0, 1);
+}
+
+function currencyInfo(currency) {
+  return state.currencySettings?.[currency] || knownCurrencies[currency] || { name: currency, symbol: `${currency} ` };
+}
+
+function allCurrencyCodes() {
+  return [...new Set([
+    ...Object.keys(state.currencySettings || {}),
+    ...allAccounts().map((account) => account.currency),
+    ...state.transactions.map((transaction) => transaction.currency),
+    ...state.investments.map((investment) => investment.currency),
+    ...state.transfers.flatMap((transfer) => [transfer.sentCurrency, transfer.receivedCurrency, transfer.feeCurrency].filter(Boolean))
+  ])].sort();
+}
+
+function activeCurrencyCodes(extraCurrency = "") {
+  return [...new Set([
+    ...activeAccounts().map((account) => account.currency),
+    extraCurrency
+  ].filter(Boolean))].sort();
+}
+
+function currencyOptionsTemplate(selectedCurrency = state.mainCurrency, includeAll = false) {
+  const codes = includeAll ? allCurrencyCodes() : activeCurrencyCodes(selectedCurrency);
+  return codes.map((code) => {
+    const info = currencyInfo(code);
+    return `<option value="${escapeAttr(code)}"${code === selectedCurrency ? " selected" : ""}>${escapeHtml(info.name)} - ${escapeHtml(code)}</option>`;
+  }).join("");
+}
+
+function accountOptionsTemplate(selectedAccountId = "", includeInactive = false) {
+  const accounts = includeInactive ? allAccounts() : activeAccounts();
+  const selectedAccount = allAccounts().find((account) => account.id === selectedAccountId);
+  const options = selectedAccount && !accounts.some((account) => account.id === selectedAccount.id)
+    ? [...accounts, selectedAccount]
+    : accounts;
+  return options.map((account) => `
+    <option value="${escapeAttr(account.id)}"${account.id === selectedAccountId ? " selected" : ""}>
+      ${escapeHtml(account.name)} - ${escapeHtml(account.currency)}
+    </option>
+  `).join("");
 }
 
 function money(amount, currency = state.mainCurrency) {
@@ -182,7 +334,7 @@ function money(amount, currency = state.mainCurrency) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
-  return `${numericAmount < 0 ? "-" : ""}${currencies[currency].symbol}${value} ${currency}`;
+  return `${numericAmount < 0 ? "-" : ""}${currencyInfo(currency).symbol}${value} ${currency}`;
 }
 
 function decimalValue(value) {
@@ -228,7 +380,7 @@ function investmentValueInCurrency(investment, targetCurrency) {
 
 function investmentCountry(investment) {
   if (investment.country) return investment.country;
-  const match = countries.find((country) => country.currency === investment.currency);
+  const match = activeAccounts().find((country) => country.currency === investment.currency) || allAccounts().find((country) => country.currency === investment.currency);
   return match?.id || "canada";
 }
 
@@ -239,7 +391,7 @@ function convertedAmount(amount, fromCurrency, targetCurrency) {
 }
 
 function countryCurrency(countryId) {
-  return countries.find((country) => country.id === countryId)?.currency || "CAD";
+  return allAccounts().find((country) => country.id === countryId)?.currency || activeAccounts()[0]?.currency || "CAD";
 }
 
 function colorForCategory(category) {
@@ -376,7 +528,7 @@ function render() {
 function renderHome() {
   $("#homeDashboard").innerHTML = `
     <section class="home-grid">
-      ${countries.map((country) => accountCardTemplate(country, monthKey(today()))).join("")}
+      ${activeAccounts().map((country) => accountCardTemplate(country, monthKey(today()))).join("")}
     </section>
     <section class="panel">
       <h2>Quick actions</h2>
@@ -391,21 +543,68 @@ function renderHome() {
       <h2>Investment money</h2>
       ${homeInvestmentSummary()}
     </section>
+    <section class="panel">
+      <h2>Upcoming reminders</h2>
+      ${homeRecurringSummary()}
+    </section>
   `;
 }
 
 function homeInvestmentSummary() {
   const total = state.investments.reduce((sum, investment) => sum + investmentInCurrency(investment, state.mainCurrency), 0);
+  const currentValueTotal = state.investments.reduce((sum, investment) => sum + investmentValueInCurrency(investment, state.mainCurrency), 0);
+  const gainLoss = currentValueTotal - total;
   if (!state.investments.length) {
     return `<p class="eyebrow">No investment money recorded yet</p>`;
   }
+  const countryTotals = activeAccounts().map((country) => {
+    const countryTotal = state.investments
+      .filter((investment) => investmentCountry(investment) === country.id)
+      .reduce((sum, investment) => sum + investmentInCurrency(investment, country.currency), 0);
+    const countryCurrent = state.investments
+      .filter((investment) => investmentCountry(investment) === country.id)
+      .reduce((sum, investment) => sum + investmentValueInCurrency(investment, country.currency), 0);
+    return `
+      <div class="metric">
+        <span>${country.name} invested</span>
+        <strong class="blue">${money(countryTotal, country.currency)}</strong>
+      </div>
+      <div class="metric">
+        <span>${country.name} gain/loss</span>
+        <strong class="${countryCurrent - countryTotal >= 0 ? "green" : "red"}">${money(countryCurrent - countryTotal, country.currency)}</strong>
+      </div>
+    `;
+  }).join("");
   return `
     <div class="metric">
       <span>Total put in investments</span>
       <strong class="blue">${money(total, state.mainCurrency)}</strong>
     </div>
+    <div class="metric">
+      <span>Current value</span>
+      <strong class="blue">${money(currentValueTotal, state.mainCurrency)}</strong>
+    </div>
+    <div class="metric">
+      <span>Total gain/loss</span>
+      <strong class="${gainLoss >= 0 ? "green" : "red"}">${money(gainLoss, state.mainCurrency)}</strong>
+    </div>
+    ${countryTotals}
     <div class="mini-list">
       ${state.investments.slice(0, 3).map(investmentTemplate).join("")}
+    </div>
+  `;
+}
+
+function homeRecurringSummary() {
+  if (!state.recurringBills.length) return `<p class="eyebrow">No recurring reminders yet</p>`;
+  return `
+    <div class="mini-list">
+      ${state.recurringBills
+    .slice()
+    .sort((a, b) => Number(a.day) - Number(b.day))
+    .slice(0, 4)
+    .map(recurringBillTemplate)
+    .join("")}
     </div>
   `;
 }
@@ -413,11 +612,29 @@ function homeInvestmentSummary() {
 function accountCardTemplate(country, selectedMonthKey) {
   const currency = country.currency;
   const summary = accountSummary(country.id, selectedMonthKey);
+  const isCollapsed = state.accountSettings[country.id]?.homeCollapsed === true;
+  if (isCollapsed) {
+    return `
+      <section class="panel account-card account-card-collapsed">
+        <div class="account-card-head">
+          <div>
+            <h2>${escapeHtml(country.name)}</h2>
+            <p>${escapeHtml(currency)}</p>
+          </div>
+          <button class="mini-toggle" type="button" data-toggle-home-account="${escapeAttr(country.id)}">Show</button>
+        </div>
+        <div class="balance small-balance">${money(summary.available, currency)}</div>
+      </section>
+    `;
+  }
   return `
     <section class="panel account-card">
-      <div class="row">
-        <h2>${country.name}</h2>
-        <strong>${currency}</strong>
+      <div class="account-card-head">
+        <div>
+          <h2>${escapeHtml(country.name)}</h2>
+          <p>${escapeHtml(currency)}</p>
+        </div>
+        <button class="mini-toggle" type="button" data-toggle-home-account="${escapeAttr(country.id)}">Minimize</button>
       </div>
       <div class="balance small-balance">${money(summary.available, currency)}</div>
       <div class="metric">
@@ -502,7 +719,7 @@ function accountSummary(countryId, selectedMonthKey) {
 function renderInvestments() {
   const total = state.investments.reduce((sum, investment) => sum + investmentInCurrency(investment, state.mainCurrency), 0);
   const currentValueTotal = state.investments.reduce((sum, investment) => sum + investmentValueInCurrency(investment, state.mainCurrency), 0);
-  const totalsByCurrency = Object.keys(currencies).reduce((totals, currency) => {
+  const totalsByCurrency = allCurrencyCodes().reduce((totals, currency) => {
     totals[currency] = state.investments
       .filter((investment) => investment.currency === currency)
       .reduce((sum, investment) => sum + Number(investment.amount), 0);
@@ -511,7 +728,17 @@ function renderInvestments() {
 
   $("#investmentCurrency").textContent = state.mainCurrency;
   $("#investmentTotal").textContent = money(total, state.mainCurrency);
-  $("#investmentCurrencyTotals").innerHTML = Object.keys(currencies).map((currency) => `
+  const investmentChoices = document.querySelector(".investment-choices");
+  if (investmentChoices) {
+    investmentChoices.innerHTML = activeAccounts().map((account) => `
+      <button class="investment-choice" data-add-investment-country="${escapeAttr(account.id)}">
+        <strong>${escapeHtml(account.currency.slice(0, 2))}</strong>
+        <span>${escapeHtml(account.name)} investment</span>
+        <small>${escapeHtml(account.currency)}</small>
+      </button>
+    `).join("");
+  }
+  $("#investmentCurrencyTotals").innerHTML = allCurrencyCodes().map((currency) => `
     <div class="currency-total">
       <span>${currency}</span>
       <strong>${money(totalsByCurrency[currency], currency)}</strong>
@@ -559,53 +786,142 @@ function investmentTemplate(investment) {
 }
 
 function renderTransactions() {
-  $("#selectedMonthLabel").textContent = monthLabel(selectedMonth);
   const categories = [...new Set([
     ...state.incomeSources,
     ...state.expenseCategories,
-    ...state.transactions.map((transaction) => transaction.category)
+    ...state.transactions.map((transaction) => transaction.category),
+    "Investment",
+    "Transfer"
   ])].sort();
 
   $("#categoryFilter").innerHTML = `<option value="all">All categories</option>` +
     categories.map((category) => `<option value="${escapeAttr(category)}">${escapeHtml(category)}</option>`).join("");
   $("#categoryFilter").value = filters.category;
+  if (filters.currency !== "all" && !allCurrencyCodes().includes(filters.currency)) filters.currency = "all";
+  $("#currencyFilter").innerHTML = `<option value="all">All currencies</option>` +
+    allCurrencyCodes().map((code) => `<option value="${escapeAttr(code)}">${escapeHtml(code)}</option>`).join("");
+  $("#currencyFilter").value = allCurrencyCodes().includes(filters.currency) ? filters.currency : "all";
 
-  const visible = state.transactions
-    .filter((transaction) => monthKey(transaction.date) === selectedMonth)
-    .filter((transaction) => filters.kind === "all" || transaction.kind === filters.kind)
-    .filter((transaction) => filters.currency === "all" || transaction.currency === filters.currency)
-    .filter((transaction) => filters.category === "all" || transaction.category === filters.category)
+  const records = [
+    ...state.transactions.map((record) => ({
+      type: record.kind,
+      date: record.date,
+      category: record.category,
+      currencies: [record.currency],
+      html: transactionTemplate(record),
+      text: `${record.kind} ${record.category} ${record.currency} ${record.note || ""}`
+    })),
+    ...state.investments.map((record) => ({
+      type: "investment",
+      date: record.date,
+      category: "Investment",
+      currencies: [record.currency],
+      html: investmentTemplate(record),
+      text: `investment ${record.name} ${record.currency} ${countryName(investmentCountry(record))} ${record.note || ""}`
+    })),
+    ...state.transfers.map((record) => ({
+      type: "transfer",
+      date: record.date,
+      category: "Transfer",
+      currencies: [record.sentCurrency, record.receivedCurrency, record.feeCurrency],
+      html: transferTemplate(record),
+      text: `transfer ${countryName(record.fromAccount)} ${countryName(record.toAccount)} ${record.sentCurrency} ${record.receivedCurrency} ${record.note || ""}`
+    }))
+  ];
+
+  const visible = records
+    .filter((record) => filters.kind === "all" || record.type === filters.kind)
+    .filter((record) => filters.currency === "all" || record.currencies.includes(filters.currency))
+    .filter((record) => filters.category === "all" || record.category === filters.category)
     .filter((transaction) => {
-      const text = `${transaction.kind} ${transaction.category} ${transaction.currency} ${transaction.note}`.toLowerCase();
-      return text.includes(filters.search.toLowerCase());
+      return transaction.text.toLowerCase().includes(filters.search.toLowerCase());
     })
     .sort((a, b) => b.date.localeCompare(a.date));
-  const visibleTransfers = state.transfers
-    .filter((transfer) => monthKey(transfer.date) === selectedMonth)
-    .sort((a, b) => b.date.localeCompare(a.date));
 
-  const accountSummaries = countries.map((country) => accountCardTemplate(country, selectedMonth)).join("");
   $("#transactionList").innerHTML = `
-    <section class="home-grid">${accountSummaries}</section>
     ${visible.length
-    ? visible.map(transactionTemplate).join("")
-    : `<section class="panel"><strong>No transactions for this month</strong><p class="eyebrow">Use Prev or Next to move between months.</p></section>`}
-    ${visibleTransfers.map(transferTemplate).join("")}
+    ? visible.map((record) => record.html).join("")
+    : `<section class="panel"><strong>No records found</strong><p class="eyebrow">Try changing the search or filters.</p></section>`}
   `;
 }
 
 function renderReports() {
-  countries.forEach((country) => {
+  $("#reportsRoot").innerHTML = activeAccounts().map((country) => {
     const months = buildPeriodReports("month", country.id);
     const years = buildPeriodReports("year", country.id);
-    const target = country.id === "canada" ? $("#canadaReportList") : $("#brazilReportList");
-    target.innerHTML = `
+    const isCollapsed = state.accountSettings[country.id]?.reportsCollapsed === true;
+    const thisMonth = months.find((report) => report.key === monthKey(today())) || emptyReport(monthKey(today()), "month", country.currency);
+    if (isCollapsed) {
+      return `
+        <section class="panel report-section report-section-collapsed">
+          <div class="account-card-head">
+            <div>
+              <h2>${escapeHtml(country.name)} reports</h2>
+              <p>${escapeHtml(country.currency)}</p>
+            </div>
+            <button class="mini-toggle" type="button" data-toggle-report-account="${escapeAttr(country.id)}">Show</button>
+          </div>
+          <div class="metric">
+            <span>This month left</span>
+            <strong>${money(thisMonth.remaining, country.currency)}</strong>
+          </div>
+        </section>
+      `;
+    }
+    return `
+      <section class="panel report-section">
+        <div class="account-card-head">
+          <div>
+            <h2>${escapeHtml(country.name)} reports</h2>
+            <p>${escapeHtml(country.currency)}</p>
+          </div>
+          <button class="mini-toggle" type="button" data-toggle-report-account="${escapeAttr(country.id)}">Minimize</button>
+        </div>
+        <div class="report-list">
+      ${reportComparisonTemplate(months, country.currency)}
       <h3>Months</h3>
       ${months.length ? months.map(monthReportTemplate).join("") : `<p class="eyebrow">No months yet</p>`}
       <h3>Years</h3>
       ${years.length ? years.map(yearReportTemplate).join("") : `<p class="eyebrow">No years yet</p>`}
+        </div>
+      </section>
     `;
-  });
+  }).join("");
+}
+
+function reportComparisonTemplate(months, currency) {
+  const thisKey = monthKey(today());
+  const lastKey = shiftMonth(thisKey, -1);
+  const blankThisMonth = emptyReport(thisKey, "month", currency);
+  const blankLastMonth = emptyReport(lastKey, "month", currency);
+  const thisMonth = months.find((report) => report.key === thisKey) || blankThisMonth;
+  const lastMonth = months.find((report) => report.key === lastKey) || blankLastMonth;
+
+  return `
+    <article class="report-card comparison-card">
+      <div class="report-year-head">
+        <span>This month vs last month</span>
+        <strong>${money(thisMonth.remaining - lastMonth.remaining, currency)}</strong>
+      </div>
+      <div class="report-metrics">
+        ${comparisonMetricTemplate("Made", thisMonth.income, lastMonth.income, currency, "green")}
+        ${comparisonMetricTemplate("Spent", thisMonth.expenses, lastMonth.expenses, currency, "red")}
+        ${comparisonMetricTemplate("Invested", thisMonth.investments, lastMonth.investments, currency, "blue")}
+        ${comparisonMetricTemplate("Left", thisMonth.remaining, lastMonth.remaining, currency, "")}
+      </div>
+    </article>
+  `;
+}
+
+function comparisonMetricTemplate(label, current, previous, currency, colorClass) {
+  const change = current - previous;
+  return `
+    <div>
+      <span>${label}</span>
+      <strong class="${colorClass}">${money(current, currency)}</strong>
+      <small class="${change >= 0 ? "green" : "red"}">${change >= 0 ? "+" : ""}${money(change, currency)} from last month</small>
+    </div>
+  `;
 }
 
 function buildPeriodReports(type, countryId) {
@@ -797,21 +1113,211 @@ function transferTemplate(transfer) {
 }
 
 function renderSettings() {
-  $("#mainCurrency").value = state.mainCurrency;
-  $("#canadaStartingBalance").value = state.accountSettings.canada.startingBalance;
-  $("#brazilStartingBalance").value = state.accountSettings.brazil.startingBalance;
+  if (!activeCurrencyCodes().includes(state.mainCurrency)) state.mainCurrency = activeAccounts()[0]?.currency || "CAD";
+  $("#mainCurrency").innerHTML = currencyOptionsTemplate(state.mainCurrency);
   $("#supabaseUrl").value = syncConfig.supabaseUrl;
   $("#supabaseKey").value = syncConfig.publishableKey;
-  $("#usdRate").value = state.ratesToCAD.USD;
-  $("#brlRate").value = state.ratesToCAD.BRL;
   $("#rateStatus").textContent = state.ratesUpdatedAt
     ? `${state.ratesSource} rates updated ${new Date(state.ratesUpdatedAt).toLocaleString()}.`
     : "Manual rates are being used.";
+  renderAccountList();
+  renderExchangeRateList();
   renderEditableList("incomeSourceList", state.incomeSources, "income");
   renderEditableList("expenseCategoryList", state.expenseCategories, "expense");
+  renderRecurringBills();
   renderCategoryColorList();
   renderEditableList("paymentMethodList", state.paymentMethods, "payment");
   renderCloudStatus();
+}
+
+function renderAccountList() {
+  $("#accountList").innerHTML = allAccounts().map((account) => {
+    const hasRecords = accountHasRecords(account.id);
+    const isLastActive = activeAccounts().length <= 1 && account.active !== false;
+    return `
+      <div class="account-setting-row">
+        <div>
+          <strong>${escapeHtml(account.name)}</strong>
+          <p>${escapeHtml(currencyInfo(account.currency).name)} - ${escapeHtml(account.currency)} ${account.active === false ? "(hidden)" : ""}</p>
+        </div>
+        <label>
+          Starting balance
+          <input data-starting-balance-account="${escapeAttr(account.id)}" inputmode="decimal" type="text" autocomplete="off" value="${escapeAttr(state.accountSettings[account.id]?.startingBalance || 0)}">
+        </label>
+        <button data-toggle-account="${escapeAttr(account.id)}"${isLastActive ? " disabled" : ""}>${account.active === false ? "Show" : "Hide"}</button>
+        <button data-delete-account="${escapeAttr(account.id)}"${hasRecords ? " disabled" : ""}>Delete</button>
+      </div>
+    `;
+  }).join("");
+}
+
+function renderExchangeRateList() {
+  $("#exchangeRateList").innerHTML = allCurrencyCodes().map((code) => `
+    <div class="exchange-rate-row">
+      <label>1 ${escapeHtml(code)} equals CAD</label>
+      <input data-rate-currency="${escapeAttr(code)}" inputmode="decimal" type="text" autocomplete="off" value="${escapeAttr(state.ratesToCAD[code] || 1)}"${code === "CAD" ? " disabled" : ""}>
+    </div>
+  `).join("");
+}
+
+function accountHasRecords(accountId) {
+  return state.transactions.some((transaction) => recordCountry(transaction) === accountId) ||
+    state.investments.some((investment) => investmentCountry(investment) === accountId) ||
+    state.transfers.some((transfer) => transfer.fromAccount === accountId || transfer.toAccount === accountId) ||
+    state.recurringBills.some((bill) => bill.country === accountId);
+}
+
+function currencyHasRecords(currency) {
+  return state.transactions.some((transaction) => transaction.currency === currency) ||
+    state.investments.some((investment) => investment.currency === currency) ||
+    state.transfers.some((transfer) => transfer.sentCurrency === currency || transfer.receivedCurrency === currency || transfer.feeCurrency === currency) ||
+    state.recurringBills.some((bill) => bill.currency === currency);
+}
+
+function accountIdFromNameAndCode(name, code) {
+  return `${name || code}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || `account-${Date.now()}`;
+}
+
+function compactCurrencyText(value) {
+  return String(value || "").toUpperCase().replace(/[^A-Z]/g, "");
+}
+
+function normalizeCurrencyCode(value) {
+  const compact = compactCurrencyText(value);
+  return currencyCodeAliases[compact] || compact;
+}
+
+function guessCurrencyCode() {
+  const typedCode = normalizeCurrencyCode($("#newCurrencyCode").value);
+  if (typedCode) return typedCode;
+
+  const words = [
+    $("#newAccountName").value,
+    $("#newCurrencyName").value
+  ].map(compactCurrencyText);
+  const aliasMatch = words.map((word) => currencyCodeAliases[word]).find(Boolean);
+  if (aliasMatch) return aliasMatch;
+
+  const knownMatch = Object.entries(knownCurrencies).find(([code, info]) => {
+    const name = compactCurrencyText(info.name);
+    const tabName = compactCurrencyText(info.tabName);
+    return words.some((word) => word === code || word === name || word === tabName || name.includes(word) || tabName.includes(word));
+  });
+  return knownMatch?.[0] || "";
+}
+
+function fillCurrencyFields(code, overwrite = false) {
+  const normalizedCode = normalizeCurrencyCode(code);
+  const info = knownCurrencies[normalizedCode];
+  if (!normalizedCode || !info) return;
+
+  if (overwrite || !$("#newCurrencyCode").value.trim()) $("#newCurrencyCode").value = normalizedCode;
+  if (overwrite || !$("#newAccountName").value.trim()) $("#newAccountName").value = info.tabName || normalizedCode;
+  if (overwrite || !$("#newCurrencyName").value.trim()) $("#newCurrencyName").value = info.name;
+  if (overwrite || !$("#newCurrencySymbol").value.trim()) $("#newCurrencySymbol").value = info.symbol;
+  if ((overwrite || !$("#newCurrencyRate").value.trim()) && state.ratesToCAD[normalizedCode] && normalizedCode !== "CAD") {
+    $("#newCurrencyRate").value = state.ratesToCAD[normalizedCode];
+  }
+  showCurrencyFormMessage(`${info.name} is ready. Add a starting balance if you want, then tap Add currency tab.`, "ok");
+}
+
+function showCurrencyFormMessage(message, tone = "") {
+  const status = $("#currencyAddStatus");
+  if (!status) return;
+  status.textContent = message;
+  status.className = `status-text currency-add-status ${tone}`.trim();
+}
+
+function addCurrencyAccount() {
+  const code = guessCurrencyCode();
+  if (knownCurrencies[code]) fillCurrencyFields(code);
+  const name = $("#newAccountName").value.trim() || knownCurrencies[code]?.tabName || code;
+  const currencyName = $("#newCurrencyName").value.trim() || knownCurrencies[code]?.name || code;
+  const symbol = $("#newCurrencySymbol").value.trim() || knownCurrencies[code]?.symbol || `${code} `;
+  const rateText = $("#newCurrencyRate").value.trim();
+  const rate = decimalValue(rateText) || state.ratesToCAD[code] || 1;
+  const startingBalanceText = $("#newAccountStartingBalance").value.trim();
+  const startingBalance = decimalValue(startingBalanceText);
+
+  if (!/^[A-Z]{3}$/.test(code)) {
+    showCurrencyFormMessage("Pick one of the currency buttons, or type a 3-letter code like USD, JPY, EUR, GBP, or CAD.", "error");
+    return;
+  }
+
+  state.currencySettings[code] = { name: currencyName, symbol };
+  state.ratesToCAD[code] = code === "CAD" ? 1 : rate;
+
+  const existingAccount = allAccounts().find((account) => account.currency === code || account.name.toLowerCase() === name.toLowerCase());
+  if (existingAccount) {
+    existingAccount.name = name;
+    existingAccount.active = true;
+    state.accounts = allAccounts().map((account) => account.id === existingAccount.id ? existingAccount : account);
+    if (!state.accountSettings[existingAccount.id]) state.accountSettings[existingAccount.id] = { startingBalance: 0 };
+    if (startingBalanceText) state.accountSettings[existingAccount.id].startingBalance = startingBalance;
+  } else {
+    let id = accountIdFromNameAndCode(name, code);
+    while (allAccounts().some((account) => account.id === id)) id = `${id}-${Date.now()}`;
+    state.accounts.push({ id, name, currency: code, active: true });
+    state.accountSettings[id] = { startingBalance };
+  }
+
+  $("#newAccountName").value = "";
+  $("#newCurrencyCode").value = "";
+  $("#newCurrencyName").value = "";
+  $("#newCurrencySymbol").value = "";
+  $("#newCurrencyRate").value = "";
+  $("#newAccountStartingBalance").value = "";
+  render();
+  showCurrencyFormMessage(rateText || code === "CAD"
+    ? `${name} was added.`
+    : `${name} was added. Tap Update online rates to get the current conversion.`, "ok");
+}
+
+function toggleAccount(accountId) {
+  const accounts = allAccounts();
+  const account = accounts.find((item) => item.id === accountId);
+  if (!account) return;
+  if (account.active !== false && activeAccounts().length <= 1) {
+    alert("Keep at least one currency tab turned on.");
+    return;
+  }
+  account.active = account.active === false;
+  state.accounts = accounts;
+  if (!activeCurrencyCodes().includes(state.mainCurrency)) state.mainCurrency = activeAccounts()[0]?.currency || "CAD";
+  render();
+}
+
+function deleteAccount(accountId) {
+  const account = allAccounts().find((item) => item.id === accountId);
+  if (!account) return;
+  if (accountHasRecords(accountId)) {
+    alert("This tab has records. Hide it instead so your old data stays safe.");
+    return;
+  }
+  if (activeAccounts().length <= 1 && account.active !== false) {
+    alert("Keep at least one currency tab.");
+    return;
+  }
+  state.accounts = allAccounts().filter((item) => item.id !== accountId);
+  delete state.accountSettings[accountId];
+  if (!state.accounts.some((item) => item.currency === account.currency) && !currencyHasRecords(account.currency)) {
+    delete state.currencySettings[account.currency];
+    delete state.ratesToCAD[account.currency];
+  }
+  if (!activeCurrencyCodes().includes(state.mainCurrency)) state.mainCurrency = activeAccounts()[0]?.currency || "CAD";
+  render();
+}
+
+function toggleHomeAccount(accountId) {
+  if (!state.accountSettings[accountId]) state.accountSettings[accountId] = { startingBalance: 0 };
+  state.accountSettings[accountId].homeCollapsed = !state.accountSettings[accountId].homeCollapsed;
+  render();
+}
+
+function toggleReportAccount(accountId) {
+  if (!state.accountSettings[accountId]) state.accountSettings[accountId] = { startingBalance: 0 };
+  state.accountSettings[accountId].reportsCollapsed = !state.accountSettings[accountId].reportsCollapsed;
+  render();
 }
 
 function renderCategoryColorList() {
@@ -864,14 +1370,124 @@ function renderEditableList(id, items, type) {
   `).join("");
 }
 
+function renderRecurringBills() {
+  const currentCategory = $("#recurringCategory").value;
+  const currentCurrency = $("#recurringCurrency").value || activeAccounts()[0]?.currency || "CAD";
+  const currentAccount = $("#recurringCountry").value || countryIdForCurrency(currentCurrency);
+  $("#recurringCurrency").innerHTML = currencyOptionsTemplate(currentCurrency);
+  $("#recurringCountry").innerHTML = accountOptionsTemplate(currentAccount);
+  $("#recurringCategory").innerHTML = state.expenseCategories
+    .map((category) => `<option value="${escapeAttr(category)}">${escapeHtml(category)}</option>`)
+    .join("");
+  if (state.expenseCategories.includes(currentCategory)) $("#recurringCategory").value = currentCategory;
+  if (activeCurrencyCodes(currentCurrency).includes(currentCurrency)) $("#recurringCurrency").value = currentCurrency;
+  if (activeAccounts().some((account) => account.id === currentAccount)) $("#recurringCountry").value = currentAccount;
+  $("#recurringBillList").innerHTML = state.recurringBills.length
+    ? state.recurringBills
+      .slice()
+      .sort((a, b) => Number(a.day) - Number(b.day))
+      .map(recurringBillTemplate)
+      .join("")
+    : `<p class="eyebrow">No recurring reminders yet</p>`;
+  $("#addRecurringBill").textContent = editingRecurringBillId ? "Save reminder" : "Add reminder";
+}
+
+function recurringBillTemplate(bill) {
+  return `
+    <article class="transaction recurring-row">
+      <div>
+        <strong>${escapeHtml(bill.name)}</strong>
+        <p>Due every month on day ${bill.day} - ${countryName(bill.country)} - ${escapeHtml(bill.category)}</p>
+        <p>${money(bill.amount, bill.currency)}</p>
+      </div>
+      <div class="transaction-actions">
+        <button data-pay-recurring="${bill.id}">Add expense</button>
+        <button data-edit-recurring="${bill.id}">Edit</button>
+        <button data-delete-recurring="${bill.id}">Delete</button>
+      </div>
+    </article>
+  `;
+}
+
+function saveRecurringBill() {
+  const name = $("#recurringName").value.trim();
+  const amount = decimalValue($("#recurringAmount").value);
+  const day = Math.min(31, Math.max(1, Math.round(decimalValue($("#recurringDay").value))));
+  if (!name || !amount) return;
+  const bill = {
+    id: editingRecurringBillId || crypto.randomUUID(),
+    name,
+    amount,
+    currency: $("#recurringCurrency").value,
+    country: $("#recurringCountry").value,
+    category: $("#recurringCategory").value,
+    day
+  };
+  const index = state.recurringBills.findIndex((item) => item.id === bill.id);
+  if (index >= 0) state.recurringBills[index] = bill;
+  else state.recurringBills.push(bill);
+  resetRecurringForm();
+  render();
+}
+
+function editRecurringBill(id) {
+  const bill = state.recurringBills.find((item) => item.id === id);
+  if (!bill) return;
+  editingRecurringBillId = id;
+  $("#recurringName").value = bill.name;
+  $("#recurringAmount").value = bill.amount;
+  $("#recurringCurrency").value = bill.currency;
+  $("#recurringCountry").value = bill.country;
+  $("#recurringCategory").value = bill.category;
+  $("#recurringDay").value = bill.day;
+  renderRecurringBills();
+}
+
+function deleteRecurringBill(id) {
+  if (!confirm("Delete this recurring reminder?")) return;
+  state.recurringBills = state.recurringBills.filter((bill) => bill.id !== id);
+  if (editingRecurringBillId === id) resetRecurringForm();
+  render();
+}
+
+function addRecurringExpense(id) {
+  const bill = state.recurringBills.find((item) => item.id === id);
+  if (!bill) return;
+  state.transactions.unshift({
+    id: crypto.randomUUID(),
+    kind: "expense",
+    amount: Number(bill.amount),
+    currency: bill.currency,
+    country: bill.country,
+    date: today(),
+    category: bill.category,
+    paymentMethod: state.paymentMethods[0] || "",
+    note: `Recurring: ${bill.name}`,
+    exchangeRateToCAD: Number(state.ratesToCAD[bill.currency])
+  });
+  render();
+}
+
+function resetRecurringForm() {
+  editingRecurringBillId = "";
+  $("#recurringName").value = "";
+  $("#recurringAmount").value = "";
+  $("#recurringDay").value = "";
+}
+
 function openForm(kind, transaction = null, currencyOverride = null, countryOverride = null) {
   const categories = kind === "income" ? state.incomeSources : state.expenseCategories;
   $("#formTitle").textContent = transaction ? `Edit ${kind}` : `Add ${kind}`;
   $("#editingId").value = transaction?.id || "";
   $("#transactionKind").value = kind;
   $("#amountInput").value = transaction?.amount || "";
-  $("#currencyInput").value = transaction?.currency || currencyOverride || state.mainCurrency;
-  $("#transactionCountryInput").value = transaction ? recordCountry(transaction) : countryOverride || countryIdForCurrency(currencyOverride || state.mainCurrency);
+  const defaultCurrency = activeCurrencyCodes().includes(state.mainCurrency) ? state.mainCurrency : activeAccounts()[0]?.currency || state.mainCurrency;
+  const selectedCurrency = transaction?.currency || currencyOverride || defaultCurrency;
+  const selectedAccount = transaction ? recordCountry(transaction) : countryOverride || countryIdForCurrency(selectedCurrency);
+  $("#currencyInput").innerHTML = currencyOptionsTemplate(selectedCurrency);
+  $("#currencyInput").value = selectedCurrency;
+  $("#transactionCountryInput").innerHTML = accountOptionsTemplate(selectedAccount, Boolean(transaction));
+  $("#transactionCountryInput").value = selectedAccount;
   $("#dateInput").value = transaction?.date || today();
   $("#categoryLabel").textContent = kind === "income" ? "Income source" : "Expense category";
   $("#categoryInput").innerHTML = categories.map((category) => `<option>${escapeHtml(category)}</option>`).join("");
@@ -882,7 +1498,7 @@ function openForm(kind, transaction = null, currencyOverride = null, countryOver
   $("#paymentMethodInput").value = transaction?.paymentMethod || state.paymentMethods[0];
   $("#noteInput").value = transaction?.note || "";
   updateRateInput(transaction);
-  $("#transactionDialog").showModal();
+  openDialog($("#transactionDialog"));
 }
 
 function updateRateInput(transaction = null) {
@@ -924,23 +1540,28 @@ function saveTransaction(event) {
   if (index >= 0) state.transactions[index] = transaction;
   else state.transactions.unshift(transaction);
 
-  $("#transactionDialog").close();
+  closeDialog($("#transactionDialog"));
   render();
 }
 
 function openInvestmentForm(investment = null, countryOverride = null) {
-  const selectedCountry = countryOverride ? countries.find((country) => country.id === countryOverride) : null;
+  const selectedCountry = countryOverride ? allAccounts().find((country) => country.id === countryOverride) : null;
   $("#investmentFormTitle").textContent = investment ? "Edit Investment" : "Add Investment";
   $("#investmentEditingId").value = investment?.id || "";
   $("#investmentName").value = investment?.name || "";
   $("#investmentAmount").value = investment?.amount || "";
   $("#investmentCurrentValue").value = investment?.currentValue || investment?.amount || "";
-  $("#investmentCurrencyInput").value = investment?.currency || selectedCountry?.currency || state.mainCurrency;
-  $("#investmentCountryInput").value = investment ? investmentCountry(investment) : selectedCountry?.id || countryIdForCurrency(state.mainCurrency);
+  const defaultCurrency = activeCurrencyCodes().includes(state.mainCurrency) ? state.mainCurrency : activeAccounts()[0]?.currency || state.mainCurrency;
+  const selectedCurrency = investment?.currency || selectedCountry?.currency || defaultCurrency;
+  const selectedAccount = investment ? investmentCountry(investment) : selectedCountry?.id || countryIdForCurrency(selectedCurrency);
+  $("#investmentCurrencyInput").innerHTML = currencyOptionsTemplate(selectedCurrency);
+  $("#investmentCurrencyInput").value = selectedCurrency;
+  $("#investmentCountryInput").innerHTML = accountOptionsTemplate(selectedAccount, Boolean(investment));
+  $("#investmentCountryInput").value = selectedAccount;
   $("#investmentDeductInput").checked = investment?.deductFromCountry !== false;
   $("#investmentDate").value = investment?.date || today();
   $("#investmentNote").value = investment?.note || "";
-  $("#investmentDialog").showModal();
+  openDialog($("#investmentDialog"));
 }
 
 function saveInvestment(event) {
@@ -966,24 +1587,34 @@ function saveInvestment(event) {
   if (index >= 0) state.investments[index] = investment;
   else state.investments.unshift(investment);
 
-  $("#investmentDialog").close();
+  closeDialog($("#investmentDialog"));
   render();
 }
 
 function openTransferForm(transfer = null) {
+  const accounts = activeAccounts();
+  const fromAccount = transfer?.fromAccount || accounts[0]?.id || "canada";
+  const toAccount = transfer?.toAccount || accounts.find((account) => account.id !== fromAccount)?.id || fromAccount;
+  const sentCurrency = transfer?.sentCurrency || countryCurrency(fromAccount);
+  const receivedCurrency = transfer?.receivedCurrency || countryCurrency(toAccount);
   $("#transferFormTitle").textContent = transfer ? "Edit Transfer" : "Transfer Money";
   $("#transferEditingId").value = transfer?.id || "";
-  $("#transferFromAccount").value = transfer?.fromAccount || "canada";
-  $("#transferToAccount").value = transfer?.toAccount || "brazil";
+  $("#transferFromAccount").innerHTML = accountOptionsTemplate(fromAccount, Boolean(transfer));
+  $("#transferFromAccount").value = fromAccount;
+  $("#transferToAccount").innerHTML = accountOptionsTemplate(toAccount, Boolean(transfer));
+  $("#transferToAccount").value = toAccount;
   $("#transferSentAmount").value = transfer?.sentAmount || "";
-  $("#transferSentCurrency").value = transfer?.sentCurrency || countryCurrency($("#transferFromAccount").value);
+  $("#transferSentCurrency").innerHTML = currencyOptionsTemplate(sentCurrency);
+  $("#transferSentCurrency").value = sentCurrency;
   $("#transferReceivedAmount").value = transfer?.receivedAmount || "";
-  $("#transferReceivedCurrency").value = transfer?.receivedCurrency || countryCurrency($("#transferToAccount").value);
+  $("#transferReceivedCurrency").innerHTML = currencyOptionsTemplate(receivedCurrency);
+  $("#transferReceivedCurrency").value = receivedCurrency;
   $("#transferFee").value = transfer?.fee || 0;
-  $("#transferFeeCurrency").value = transfer?.feeCurrency || $("#transferSentCurrency").value;
+  $("#transferFeeCurrency").innerHTML = currencyOptionsTemplate(transfer?.feeCurrency || sentCurrency);
+  $("#transferFeeCurrency").value = transfer?.feeCurrency || sentCurrency;
   $("#transferDate").value = transfer?.date || today();
   $("#transferNote").value = transfer?.note || "";
-  $("#transferDialog").showModal();
+  openDialog($("#transferDialog"));
 }
 
 function saveTransfer(event) {
@@ -1009,7 +1640,7 @@ function saveTransfer(event) {
   if (index >= 0) state.transfers[index] = transfer;
   else state.transfers.unshift(transfer);
 
-  $("#transferDialog").close();
+  closeDialog($("#transferDialog"));
   render();
 }
 
@@ -1034,6 +1665,11 @@ function renameListItem(type, oldName) {
     if (transaction.kind === kind && transaction.category === oldName) transaction.category = name;
     if (type === "payment" && transaction.paymentMethod === oldName) transaction.paymentMethod = name;
   });
+  if (type === "expense") {
+    state.recurringBills.forEach((bill) => {
+      if (bill.category === oldName) bill.category = name;
+    });
+  }
   render();
 }
 
@@ -1042,6 +1678,11 @@ function deleteListItem(type, name) {
   const list = type === "income" ? state.incomeSources : type === "expense" ? state.expenseCategories : state.paymentMethods;
   const index = list.indexOf(name);
   if (index >= 0) list.splice(index, 1);
+  if (type === "expense") {
+    state.recurringBills.forEach((bill) => {
+      if (bill.category === name) bill.category = state.expenseCategories.includes("Other") ? "Other" : state.expenseCategories[0] || "";
+    });
+  }
   removeCustomColor(type, name);
   render();
 }
@@ -1138,18 +1779,24 @@ async function refreshRates() {
   status.textContent = "Updating rates from the internet...";
 
   try {
-    const response = await fetch("https://api.frankfurter.dev/v2/rates?base=CAD&quotes=USD,BRL", {
-      cache: "no-store"
-    });
-    if (!response.ok) throw new Error("Rate service unavailable");
-
-    const data = await response.json();
-    const usdPerCad = Number(data.rates?.USD);
-    const brlPerCad = Number(data.rates?.BRL);
-    if (!usdPerCad || !brlPerCad) throw new Error("Rates missing");
-
-    state.ratesToCAD.USD = 1 / usdPerCad;
-    state.ratesToCAD.BRL = 1 / brlPerCad;
+    const quoteCodes = allCurrencyCodes().filter((code) => code !== "CAD");
+    if (!quoteCodes.length) {
+      status.textContent = "CAD is already the base rate.";
+      return;
+    }
+    const results = await Promise.allSettled(quoteCodes.map(async (code) => {
+      const response = await fetch(`https://api.frankfurter.dev/v2/rates?base=CAD&quotes=${encodeURIComponent(code)}`, {
+        cache: "no-store"
+      });
+      if (!response.ok) return false;
+      const data = await response.json();
+      const amountPerCad = Number(data.rates?.[code]);
+      if (!amountPerCad) return false;
+      state.ratesToCAD[code] = 1 / amountPerCad;
+      return true;
+    }));
+    const updatedCount = results.filter((result) => result.status === "fulfilled" && result.value).length;
+    if (!updatedCount) throw new Error("Rate service unavailable");
     state.ratesToCAD.CAD = 1;
     state.ratesUpdatedAt = new Date().toISOString();
     state.ratesSource = "Online";
@@ -1162,23 +1809,32 @@ async function refreshRates() {
 }
 
 function countryName(id) {
-  return countries.find((country) => country.id === id)?.name || "Canada";
+  return allAccounts().find((country) => country.id === id)?.name || activeAccounts()[0]?.name || "Account";
 }
 
 function countryIdForCurrency(currency) {
-  return countries.find((country) => country.currency === currency)?.id || "canada";
+  return activeAccounts().find((country) => country.currency === currency)?.id ||
+    allAccounts().find((country) => country.currency === currency)?.id ||
+    activeAccounts()[0]?.id ||
+    "canada";
 }
 
 function backupExport() {
-  exportFile("make-and-spend-backup.json", JSON.stringify(state, null, 2), "application/json");
+  const stamp = new Date().toISOString().slice(0, 10);
+  exportFile(`make-and-spend-backup-${stamp}.json`, JSON.stringify(state, null, 2), "application/json");
+  const status = $("#backupStatus");
+  if (status) status.textContent = "Full backup downloaded. Keep that file somewhere safe.";
 }
 
 function backupImport(file) {
+  if (!confirm("Importing a backup will replace the data on this device. Continue?")) return;
   const reader = new FileReader();
   reader.onload = () => {
     try {
       state = normalizeState(JSON.parse(reader.result));
       render();
+      const status = $("#backupStatus");
+      if (status) status.textContent = "Backup imported on this device.";
     } catch {
       alert("That backup file could not be opened.");
     }
@@ -1189,8 +1845,9 @@ function backupImport(file) {
 function renderCloudStatus(message = "") {
   const status = $("#cloudStatus");
   if (!status) return;
+  const lastSync = cloudState.lastUpdatedAt ? ` Last synced ${new Date(cloudState.lastUpdatedAt).toLocaleString()}.` : "";
   if (message) {
-    status.textContent = message;
+    status.textContent = `${message}${lastSync}`;
     return;
   }
   if (!syncConfig.supabaseUrl) {
@@ -1199,8 +1856,8 @@ function renderCloudStatus(message = "") {
   }
   if (cloudState.user) {
     status.textContent = cloudState.enabled
-      ? `Cloud sync connected as ${cloudState.user.email || "your account"}.`
-      : `Logged in as ${cloudState.user.email || "your account"}. Choose Save or Load to start syncing.`;
+      ? `Cloud sync connected as ${cloudState.user.email || "your account"}.${lastSync}`
+      : `Logged in as ${cloudState.user.email || "your account"}. Choose Save or Load to start syncing.${lastSync}`;
     return;
   }
   status.textContent = "Cloud settings saved. Sign up or log in to sync.";
@@ -1273,7 +1930,7 @@ async function loginCloud() {
     cloudState.user = data.user;
     cloudState.enabled = localStorage.getItem("makeSpendCloudEnabled") === "true";
     startCloudPolling();
-    setCloudStatus("Logged in. Tap Load cloud data or Save this device to cloud.");
+    setCloudStatus(cloudState.enabled ? "Logged in. Auto sync is on." : "Logged in. Tap Load cloud data or Save this device to cloud.");
   } catch (error) {
     setCloudStatus(error.message);
   }
@@ -1315,7 +1972,7 @@ async function saveCloudData(silent = false) {
     cloudState.lastUpdatedAt = updatedAt;
     localStorage.setItem("makeSpendCloudEnabled", "true");
     localStorage.setItem("makeSpendCloudUpdatedAt", updatedAt);
-    if (!silent) setCloudStatus("Saved this device data to cloud.");
+    setCloudStatus(silent ? "Auto-saved to cloud." : "Saved this device data to cloud.");
     startCloudPolling();
   } catch (error) {
     if (!silent) setCloudStatus(error.message);
@@ -1346,7 +2003,7 @@ async function loadCloudData(silent = false) {
     localStorage.setItem("makeSpendCloudEnabled", "true");
     localStorage.setItem("makeSpendCloudUpdatedAt", cloudState.lastUpdatedAt);
     render();
-    if (!silent) setCloudStatus("Loaded cloud data onto this device.");
+    setCloudStatus(silent ? "Auto-loaded cloud data." : "Loaded cloud data onto this device.");
     startCloudPolling();
   } catch (error) {
     if (!silent) setCloudStatus(error.message);
@@ -1469,6 +2126,15 @@ document.addEventListener("click", (event) => {
   if (target.dataset.renameList) renameListItem(target.dataset.renameList, target.dataset.name);
   if (target.dataset.deleteList) deleteListItem(target.dataset.deleteList, target.dataset.name);
   if (target.dataset.resetColor) resetChartColor(target.dataset.resetColor, target.dataset.colorName);
+  if (target.dataset.payRecurring) addRecurringExpense(target.dataset.payRecurring);
+  if (target.dataset.editRecurring) editRecurringBill(target.dataset.editRecurring);
+  if (target.dataset.deleteRecurring) deleteRecurringBill(target.dataset.deleteRecurring);
+  if (target.id === "addCurrencyAccount") addCurrencyAccount();
+  if (target.dataset.toggleAccount) toggleAccount(target.dataset.toggleAccount);
+  if (target.dataset.deleteAccount) deleteAccount(target.dataset.deleteAccount);
+  if (target.dataset.toggleHomeAccount) toggleHomeAccount(target.dataset.toggleHomeAccount);
+  if (target.dataset.toggleReportAccount) toggleReportAccount(target.dataset.toggleReportAccount);
+  if (target.dataset.currencyPreset) fillCurrencyFields(target.dataset.currencyPreset, true);
 });
 
 document.addEventListener("change", (event) => {
@@ -1476,21 +2142,60 @@ document.addEventListener("change", (event) => {
   if (target.matches("[data-color-type]")) {
     setChartColor(target.dataset.colorType, target.dataset.colorName, target.value);
   }
+  if (target.matches("[data-starting-balance-account]")) {
+    const accountId = target.dataset.startingBalanceAccount;
+    if (!state.accountSettings[accountId]) state.accountSettings[accountId] = { startingBalance: 0 };
+    state.accountSettings[accountId].startingBalance = decimalValue(target.value);
+    render();
+  }
+  if (target.matches("[data-rate-currency]")) {
+    const code = target.dataset.rateCurrency;
+    state.ratesToCAD[code] = code === "CAD" ? 1 : decimalValue(target.value) || state.ratesToCAD[code] || 1;
+    state.ratesSource = "Manual";
+    state.ratesUpdatedAt = "";
+    render();
+  }
 });
 
 $("#transactionForm").addEventListener("submit", saveTransaction);
 $("#investmentForm").addEventListener("submit", saveInvestment);
 $("#transferForm").addEventListener("submit", saveTransfer);
 $("#closeDialog").addEventListener("click", () => {
-  $("#transactionDialog").close();
+  closeDialog($("#transactionDialog"));
 });
 $("#closeInvestmentDialog").addEventListener("click", () => {
-  $("#investmentDialog").close();
+  closeDialog($("#investmentDialog"));
 });
 $("#closeTransferDialog").addEventListener("click", () => {
-  $("#transferDialog").close();
+  closeDialog($("#transferDialog"));
 });
-$("#currencyInput").addEventListener("change", () => updateRateInput());
+$$("dialog").forEach((dialog) => {
+  dialog.addEventListener("close", unlockPageBehindDialog);
+});
+$("#currencyInput").addEventListener("change", (event) => {
+  $("#transactionCountryInput").value = countryIdForCurrency(event.target.value);
+  updateRateInput();
+});
+$("#newCurrencyCode").addEventListener("input", (event) => {
+  event.target.value = event.target.value.toUpperCase();
+});
+$("#newCurrencyCode").addEventListener("blur", () => {
+  const code = normalizeCurrencyCode($("#newCurrencyCode").value);
+  if (knownCurrencies[code]) {
+    fillCurrencyFields(code);
+  } else if (code) {
+    $("#newCurrencyCode").value = code.slice(0, 3);
+    showCurrencyFormMessage("For custom currencies, use the real 3-letter code and add the exchange rate if you know it.", "");
+  }
+});
+$("#newAccountName").addEventListener("blur", () => {
+  const code = guessCurrencyCode();
+  if (knownCurrencies[code]) fillCurrencyFields(code);
+});
+$("#newCurrencyName").addEventListener("blur", () => {
+  const code = guessCurrencyCode();
+  if (knownCurrencies[code]) fillCurrencyFields(code);
+});
 $("#transactionCountryInput").addEventListener("change", (event) => {
   $("#currencyInput").value = countryCurrency(event.target.value);
   updateRateInput();
@@ -1498,26 +2203,32 @@ $("#transactionCountryInput").addEventListener("change", (event) => {
 $("#investmentCurrencyInput").addEventListener("change", (event) => {
   $("#investmentCountryInput").value = countryIdForCurrency(event.target.value);
 });
+$("#recurringCountry").addEventListener("change", (event) => {
+  $("#recurringCurrency").value = countryCurrency(event.target.value);
+});
+$("#recurringCurrency").addEventListener("change", (event) => {
+  $("#recurringCountry").value = countryIdForCurrency(event.target.value);
+});
 $("#transferFromAccount").addEventListener("change", (event) => {
   $("#transferSentCurrency").value = countryCurrency(event.target.value);
   $("#transferFeeCurrency").value = $("#transferSentCurrency").value;
   if ($("#transferToAccount").value === event.target.value) {
-    $("#transferToAccount").value = event.target.value === "canada" ? "brazil" : "canada";
+    $("#transferToAccount").value = activeAccounts().find((account) => account.id !== event.target.value)?.id || event.target.value;
     $("#transferReceivedCurrency").value = countryCurrency($("#transferToAccount").value);
   }
 });
 $("#transferToAccount").addEventListener("change", (event) => {
   $("#transferReceivedCurrency").value = countryCurrency(event.target.value);
   if ($("#transferFromAccount").value === event.target.value) {
-    $("#transferFromAccount").value = event.target.value === "canada" ? "brazil" : "canada";
+    $("#transferFromAccount").value = activeAccounts().find((account) => account.id !== event.target.value)?.id || event.target.value;
     $("#transferSentCurrency").value = countryCurrency($("#transferFromAccount").value);
   }
 });
-$("#previousMonth").addEventListener("click", () => {
+$("#previousMonth")?.addEventListener("click", () => {
   selectedMonth = shiftMonth(selectedMonth, -1);
   render();
 });
-$("#nextMonth").addEventListener("click", () => {
+$("#nextMonth")?.addEventListener("click", () => {
   selectedMonth = shiftMonth(selectedMonth, 1);
   render();
 });
@@ -1537,26 +2248,6 @@ $("#mainCurrency").addEventListener("change", (event) => {
   state.mainCurrency = event.target.value;
   render();
 });
-$("#canadaStartingBalance").addEventListener("change", (event) => {
-  state.accountSettings.canada.startingBalance = decimalValue(event.target.value);
-  render();
-});
-$("#brazilStartingBalance").addEventListener("change", (event) => {
-  state.accountSettings.brazil.startingBalance = decimalValue(event.target.value);
-  render();
-});
-$("#usdRate").addEventListener("change", (event) => {
-  state.ratesToCAD.USD = decimalValue(event.target.value) || state.ratesToCAD.USD;
-  state.ratesSource = "Manual";
-  state.ratesUpdatedAt = "";
-  render();
-});
-$("#brlRate").addEventListener("change", (event) => {
-  state.ratesToCAD.BRL = decimalValue(event.target.value) || state.ratesToCAD.BRL;
-  state.ratesSource = "Manual";
-  state.ratesUpdatedAt = "";
-  render();
-});
 $("#themeButton").addEventListener("click", () => {
   state.theme = state.theme === "dark" ? "light" : "dark";
   render();
@@ -1564,6 +2255,7 @@ $("#themeButton").addEventListener("click", () => {
 $("#exportCsv").addEventListener("click", csvExport);
 $("#exportBackup").addEventListener("click", backupExport);
 $("#refreshRates").addEventListener("click", refreshRates);
+$("#addRecurringBill").addEventListener("click", saveRecurringBill);
 $("#saveCloudSettings").addEventListener("click", saveCloudSettingsFromInputs);
 $("#signUpCloud").addEventListener("click", signUpCloud);
 $("#loginCloud").addEventListener("click", loginCloud);

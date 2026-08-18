@@ -67,29 +67,23 @@
         <header class="topbar">
           <div>
             <p class="eyebrow">Make & Spend</p>
-            <h1>This Month</h1>
+            <h1>Transactions</h1>
           </div>
         </header>
 
         <section class="panel filters">
-          <div class="month-switcher">
-            <button id="previousMonth" type="button">Prev</button>
-            <strong id="selectedMonthLabel">This month</strong>
-            <button id="nextMonth" type="button">Next</button>
-          </div>
           <input id="searchInput" type="search" placeholder="Search transactions">
-          <div class="segmented">
+          <div class="segmented wide-segmented">
             <button class="selected" data-kind-filter="all">All</button>
             <button data-kind-filter="income">Income</button>
             <button data-kind-filter="expense">Expense</button>
+            <button data-kind-filter="investment">Invest</button>
+            <button data-kind-filter="transfer">Transfer</button>
           </div>
           <div class="grid-two">
             <select id="categoryFilter"></select>
             <select id="currencyFilter">
               <option value="all">All currencies</option>
-              <option value="CAD">CAD</option>
-              <option value="USD">USD</option>
-              <option value="BRL">BRL</option>
             </select>
           </div>
         </section>
@@ -105,15 +99,7 @@
           </div>
         </header>
 
-        <section class="panel">
-          <h2>Canada reports</h2>
-          <div class="report-list" id="canadaReportList"></div>
-        </section>
-
-        <section class="panel">
-          <h2>Brasil reports</h2>
-          <div class="report-list" id="brazilReportList"></div>
-        </section>
+        <div id="reportsRoot"></div>
       </section>
 
       <section class="screen" id="settingsScreen">
@@ -126,29 +112,40 @@
 
         <section class="panel">
           <label>Main currency for totals</label>
-          <select id="mainCurrency">
-            <option value="CAD">Canadian dollar - CAD</option>
-            <option value="USD">US dollar - USD</option>
-            <option value="BRL">Brazilian real - BRL</option>
-          </select>
+          <select id="mainCurrency"></select>
         </section>
 
         <section class="panel">
-          <h2>Account settings</h2>
-          <label>Canada starting balance</label>
-          <input id="canadaStartingBalance" inputmode="decimal" type="text" autocomplete="off">
-          <label>Brasil starting balance</label>
-          <input id="brazilStartingBalance" inputmode="decimal" type="text" autocomplete="off">
+          <h2>Currency tabs</h2>
+          <p class="helper-text">Pick a currency below, or type your own 3-letter code.</p>
+          <div class="currency-presets" id="currencyPresets">
+            <button type="button" data-currency-preset="USD">US dollar</button>
+            <button type="button" data-currency-preset="EUR">Euro</button>
+            <button type="button" data-currency-preset="JPY">Japan yen</button>
+            <button type="button" data-currency-preset="GBP">British pound</button>
+            <button type="button" data-currency-preset="MXN">Mexico peso</button>
+            <button type="button" data-currency-preset="ARS">Argentina peso</button>
+            <button type="button" data-currency-preset="CLP">Chile peso</button>
+            <button type="button" data-currency-preset="COP">Colombia peso</button>
+          </div>
+          <div class="currency-form">
+            <input id="newAccountName" placeholder="Tab name, like United States">
+            <input id="newCurrencyCode" placeholder="Code, like USD or JPY" maxlength="20">
+            <input id="newCurrencyName" placeholder="Currency name">
+            <input id="newCurrencySymbol" placeholder="Symbol, like $">
+            <input id="newCurrencyRate" inputmode="decimal" type="text" autocomplete="off" placeholder="Exchange rate, optional">
+            <input id="newAccountStartingBalance" inputmode="decimal" type="text" autocomplete="off" placeholder="Starting balance">
+            <button id="addCurrencyAccount" type="button">Add currency tab</button>
+          </div>
+          <p class="status-text" id="currencyAddStatus"></p>
+          <div id="accountList" class="editable-list"></div>
         </section>
 
         <section class="panel">
           <h2>Exchange rates to CAD</h2>
           <button id="refreshRates" class="rate-refresh" type="button">Update online rates</button>
           <p class="status-text" id="rateStatus">Manual rates are being used.</p>
-          <label>1 USD equals</label>
-          <input id="usdRate" inputmode="decimal" type="text" autocomplete="off">
-          <label>1 BRL equals</label>
-          <input id="brlRate" inputmode="decimal" type="text" autocomplete="off">
+          <div id="exchangeRateList" class="editable-list"></div>
         </section>
 
         <section class="panel">
@@ -167,6 +164,20 @@
             <button data-add-list="expense">Add</button>
           </div>
           <div id="expenseCategoryList" class="editable-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Recurring reminders</h2>
+          <div class="recurring-form">
+            <input id="recurringName" placeholder="Bill name">
+            <input id="recurringAmount" inputmode="decimal" type="text" autocomplete="off" placeholder="Amount">
+            <select id="recurringCurrency"></select>
+            <select id="recurringCountry"></select>
+            <select id="recurringCategory"></select>
+            <input id="recurringDay" inputmode="numeric" type="text" autocomplete="off" placeholder="Day 1-31">
+            <button id="addRecurringBill" type="button">Add reminder</button>
+          </div>
+          <div id="recurringBillList" class="editable-list"></div>
         </section>
 
         <section class="panel">
@@ -213,18 +224,20 @@
         </section>
 
         <section class="panel">
-          <h2>Data</h2>
+          <h2>Backup</h2>
           <button id="exportCsv">Export CSV</button>
-          <button id="exportBackup">Export backup</button>
+          <button id="exportBackup">Export full backup</button>
           <label class="file-label">
-            Import backup
+            Import full backup
             <input id="importBackup" type="file" accept="application/json">
           </label>
+          <p class="status-text" id="backupStatus">A full backup saves transactions, investments, reminders, categories, colors, and settings.</p>
         </section>
       </section>
 
       <nav class="tabs">
         <button class="active" data-tab="homeScreen">Home<span>Home</span></button>
+        <button data-tab="transactionsScreen">Txn<span>Transactions</span></button>
         <button data-tab="reportsScreen">Rpt<span>Reports</span></button>
         <button data-tab="settingsScreen">Set<span>Settings</span></button>
       </nav>
@@ -244,17 +257,10 @@
         <input id="amountInput" type="text" inputmode="decimal" autocomplete="off" required>
 
         <label>Currency</label>
-        <select id="currencyInput">
-          <option value="CAD">CAD</option>
-          <option value="USD">USD</option>
-          <option value="BRL">BRL</option>
-        </select>
+        <select id="currencyInput"></select>
 
-        <label>Country account</label>
-        <select id="transactionCountryInput">
-          <option value="canada">Canada</option>
-          <option value="brazil">Brasil</option>
-        </select>
+        <label>Currency tab</label>
+        <select id="transactionCountryInput"></select>
 
         <label>Date</label>
         <input id="dateInput" type="date" required>
@@ -289,46 +295,28 @@
         <input type="hidden" id="transferEditingId">
 
         <label>From</label>
-        <select id="transferFromAccount">
-          <option value="canada">Canada</option>
-          <option value="brazil">Brasil</option>
-        </select>
+        <select id="transferFromAccount"></select>
 
         <label>Amount sent</label>
         <input id="transferSentAmount" type="text" inputmode="decimal" autocomplete="off" required>
 
         <label>Currency sent</label>
-        <select id="transferSentCurrency">
-          <option value="CAD">CAD</option>
-          <option value="BRL">BRL</option>
-          <option value="USD">USD</option>
-        </select>
+        <select id="transferSentCurrency"></select>
 
         <label>To</label>
-        <select id="transferToAccount">
-          <option value="brazil">Brasil</option>
-          <option value="canada">Canada</option>
-        </select>
+        <select id="transferToAccount"></select>
 
         <label>Amount received</label>
         <input id="transferReceivedAmount" type="text" inputmode="decimal" autocomplete="off" required>
 
         <label>Currency received</label>
-        <select id="transferReceivedCurrency">
-          <option value="BRL">BRL</option>
-          <option value="CAD">CAD</option>
-          <option value="USD">USD</option>
-        </select>
+        <select id="transferReceivedCurrency"></select>
 
         <label>Transfer fee</label>
         <input id="transferFee" type="text" inputmode="decimal" autocomplete="off" value="0">
 
         <label>Fee currency</label>
-        <select id="transferFeeCurrency">
-          <option value="CAD">CAD</option>
-          <option value="BRL">BRL</option>
-          <option value="USD">USD</option>
-        </select>
+        <select id="transferFeeCurrency"></select>
 
         <label>Date</label>
         <input id="transferDate" type="date" required>
@@ -359,21 +347,14 @@
         <input id="investmentCurrentValue" type="text" inputmode="decimal" autocomplete="off">
 
         <label>Currency</label>
-        <select id="investmentCurrencyInput">
-          <option value="CAD">CAD</option>
-          <option value="USD">USD</option>
-          <option value="BRL">BRL</option>
-        </select>
+        <select id="investmentCurrencyInput"></select>
 
         <label>Investment tab</label>
-        <select id="investmentCountryInput">
-          <option value="canada">Canada</option>
-          <option value="brazil">Brasil</option>
-        </select>
+        <select id="investmentCountryInput"></select>
 
         <label class="check-row">
           <input id="investmentDeductInput" type="checkbox" checked>
-          <span>Take this money out of that country tab</span>
+          <span>Take this money out of that currency tab</span>
         </label>
 
         <label>Date</label>

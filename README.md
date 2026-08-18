@@ -4,11 +4,17 @@ This is the Windows and Visual Studio Code friendly version of Make & Spend.
 
 It runs as a simple iPhone-sized web app and stores data locally in the browser. It works offline after the first load if served from a local web server.
 
-The app uses three simple tabs: Home, Reports, and Settings. Canada and Brasil appear as account cards inside Home. Canada records CAD, and Brasil records BRL.
+The app uses four simple tabs: Home, Transactions, Reports, and Settings. Currency tabs appear as account cards inside Home. The app starts with Canada/CAD and Brasil/BRL, and you can add USD or another currency in Settings.
 
-Real account balances carry forward. Monthly income, spending, transfer fees, and investment totals reset for each month, but money left over stays in the account balance. You can set starting balances in Settings.
+Real account balances carry forward. Monthly income, spending, transfer fees, and investment totals reset for each month, but money left over stays in the account balance. You can set starting balances for each currency tab in Settings.
 
-The **Reports** tab keeps month and year records, with separate report sections for Canada and Brasil. Canada reports stay in CAD and Brasil reports stay in BRL, without converting between them.
+The **Reports** tab keeps month and year records, with separate report sections for each active currency tab. Each report stays in that tab's currency without converting the report section into another currency.
+
+Settings includes **Currency tabs**. You can add a currency tab, choose its code/name/symbol, set its CAD exchange rate, show or hide tabs, and delete empty tabs. Tabs with old records can be hidden instead of deleted so the old data stays safe.
+
+The **Transactions** tab shows all money records in one searchable list, including income, expenses, investments, and transfers. You can filter by record type, category/source, and currency.
+
+Reports also show a simple **this month vs last month** comparison for money made, money spent, investments, and money left.
 
 Amount and rate fields accept either a dot or comma for cents, so `12.50` and `12,50` both save as twelve dollars and fifty cents.
 
@@ -49,13 +55,15 @@ Default category colors:
 - Taxes: `#8D6E63`
 - Other: `#8E8E93`
 
-It also includes transfers between Canada and Brasil. Transfers move money between accounts without counting as new income or regular expenses. Transfer fees are tracked separately.
+It also includes transfers between currency tabs. Transfers move money between accounts without counting as new income or regular expenses. Transfer fees are tracked separately.
 
-Home includes a simple **Add Investment** button. Investments track contributions, current value, and gains or losses without connecting to banks or moving real money.
+Home includes a simple **Add Investment** button. Investments track contributions, current value, country totals, and gains or losses without connecting to banks or moving real money.
+
+Settings includes **Recurring reminders** for bills that happen every month. Reminders do not automatically spend money. When you pay one, tap **Add expense** to record it.
 
 Settings includes an **Update online rates** button. It uses the public Frankfurter exchange-rate API when internet is available, then saves the latest rates locally. If the internet is unavailable, your saved/manual rates stay in place.
 
-Investments can be assigned to Canada or Brasil. By default, investment money is deducted from that country account in blue, but it is not counted as a red expense. Uncheck **Take this money out of that country tab** when the investment money came from somewhere else.
+Investments can be assigned to a currency tab. By default, investment money is deducted from that tab in blue, but it is not counted as a red expense. Uncheck **Take this money out of that currency tab** when the investment money came from somewhere else.
 
 ## Cloud Sync
 
@@ -98,7 +106,9 @@ The app is configured with this Supabase Project URL:
 https://wzsefkygcxvulukzszfw.supabase.co
 ```
 
-Log in in Settings, then use **Save this device to cloud** or **Load cloud data**. After cloud sync is started, the app checks for newer cloud data about every 30 seconds.
+Log in in Settings, then use **Save this device to cloud** or **Load cloud data**. After cloud sync is started, the app checks for newer cloud data about every 30 seconds and shows when it last synced.
+
+Settings also includes **Export full backup** and **Import full backup**. A full backup includes transactions, investments, recurring reminders, categories, colors, exchange rates, and settings.
 
 ## Run in VS Code on Windows
 
