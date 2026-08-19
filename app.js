@@ -212,11 +212,15 @@ const translations = {
     "Create a shared tab, then send the invite code to the other person.": "Crie uma aba compartilhada e envie o código de convite para a outra pessoa.",
     "Joint Brasil Tanya & Oliver": "Brasil conjunto Tanya e Oliver",
     "Create joint tab": "Criar aba conjunta",
+    "Creating...": "Criando...",
     "Paste invite code": "Colar código de convite",
     "Join joint tab": "Entrar na aba conjunta",
+    "Joining...": "Entrando...",
     "No joint tabs yet": "Ainda não há abas conjuntas",
     "Invite code": "Código de convite",
     "Copy code": "Copiar código",
+    "Your invite code": "Seu código de convite",
+    "Send this code to the other person.": "Envie este código para a outra pessoa.",
     "This is the currency used for big totals and investment totals.": "Esta é a moeda usada nos totais principais e nos totais de investimento.",
     "Main currency for totals": "Moeda principal dos totais",
     "Pick a currency below, or type your own 3-letter code.": "Escolha uma moeda abaixo ou digite seu próprio código de 3 letras.",
@@ -422,9 +426,12 @@ const translations = {
     "Sign in to save to a joint tab.": "Entre para salvar em uma aba conjunta.",
     "Joint tabs are not set up in Supabase yet. Run the Joint tabs SQL from the README, then refresh this app.": "As abas conjuntas ainda não foram configuradas no Supabase. Rode o SQL de abas conjuntas do README e atualize este app.",
     "Add a name for the joint tab.": "Adicione um nome para a aba conjunta.",
+    "Creating joint tab...": "Criando aba conjunta...",
     "Joint tab created. Send this invite code:": "Aba conjunta criada. Envie este código de convite:",
     "Joint tab could not be opened after it was created.": "Não foi possível abrir a aba conjunta depois de criada.",
     "Paste the invite code first.": "Cole o código de convite primeiro.",
+    "Joining joint tab...": "Entrando na aba conjunta...",
+    "Syncing joint tabs...": "Sincronizando abas conjuntas...",
     "Invite code not found.": "Código de convite não encontrado.",
     "Joint tab joined.": "Você entrou na aba conjunta.",
     "Invite code copied.": "Código de convite copiado.",
@@ -470,6 +477,7 @@ let openSettingsPanels = new Set(loadOpenSections("makeSpendSettingsOpen", ["acc
 let openMoneySettingsPanels = new Set(loadOpenSections("makeSpendMoneySettingsOpen", ["main"]));
 let selectedMonth = monthKey(today());
 let editingRecurringBillId = "";
+let jointTabUi = { loading: "", latestInviteCode: "" };
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -1649,7 +1657,15 @@ function renderJointTabs() {
   const sharedAccounts = allAccounts().filter((account) => account.sharedTabId);
   const list = $("#jointTabList");
   if (!list) return;
-  list.innerHTML = sharedAccounts.length ? sharedAccounts.map((account) => `
+  const inviteBox = jointTabUi.latestInviteCode ? `
+    <div class="invite-code-box">
+      <span>Your invite code</span>
+      <strong>${escapeHtml(jointTabUi.latestInviteCode)}</strong>
+      <p>Send this code to the other person.</p>
+      <button data-copy-invite="${escapeAttr(jointTabUi.latestInviteCode)}">Copy code</button>
+    </div>
+  ` : "";
+  list.innerHTML = `${inviteBox}${sharedAccounts.length ? sharedAccounts.map((account) => `
     <div class="account-setting-row joint-row">
       <div>
         <strong>${escapeHtml(account.name)}</strong>
@@ -1657,12 +1673,40 @@ function renderJointTabs() {
       </div>
       <button data-copy-invite="${escapeAttr(account.inviteCode || "")}">Copy code</button>
     </div>
-  `).join("") : `<p class="eyebrow">No joint tabs yet</p>`;
+  `).join("") : `<p class="eyebrow">No joint tabs yet</p>`}`;
+  updateJointTabControls();
 }
 
 function setJointTabStatus(message) {
   const status = $("#jointTabStatus");
   if (status) status.textContent = translateText(message);
+}
+
+function updateJointTabControls() {
+  const createButton = $("#createJointTab");
+  const joinButton = $("#joinJointTab");
+  const createLoading = jointTabUi.loading === "create";
+  const joinLoading = jointTabUi.loading === "join";
+  if (createButton) {
+    createButton.disabled = Boolean(jointTabUi.loading);
+    createButton.textContent = translateText(createLoading ? "Creating..." : "Create joint tab");
+    createButton.classList.toggle("loading", createLoading);
+  }
+  if (joinButton) {
+    joinButton.disabled = Boolean(jointTabUi.loading);
+    joinButton.textContent = translateText(joinLoading ? "Joining..." : "Join joint tab");
+    joinButton.classList.toggle("loading", joinLoading);
+  }
+  ["#jointTabName", "#jointTabCurrency", "#jointInviteCode"].forEach((selector) => {
+    const field = $(selector);
+    if (field) field.disabled = Boolean(jointTabUi.loading);
+  });
+}
+
+function setJointTabLoading(action, message = "") {
+  jointTabUi.loading = action;
+  updateJointTabControls();
+  if (message) setJointTabStatus(message);
 }
 
 function jointTabErrorMessage(error) {
@@ -2727,7 +2771,9 @@ function privateStateForCloud() {
 }
 
 async function createJointTab() {
+  if (jointTabUi.loading) return;
   try {
+    setJointTabLoading("create", "Creating joint tab...");
     const user = cloudState.user || await refreshCloudSession();
     if (!user) throw new Error("Sign in before creating a joint tab.");
     const name = $("#jointTabName").value.trim();
@@ -2745,15 +2791,20 @@ async function createJointTab() {
     if (!joinedTab) throw new Error("Joint tab could not be opened after it was created.");
     ensureSharedAccount(joinedTab);
     $("#jointTabName").value = "";
+    jointTabUi.latestInviteCode = inviteCode;
+    setJointTabLoading("");
     setJointTabStatus(`Joint tab created. Send this invite code: ${inviteCode}`);
     render();
   } catch (error) {
+    setJointTabLoading("");
     setJointTabStatus(jointTabErrorMessage(error));
   }
 }
 
 async function joinJointTab() {
+  if (jointTabUi.loading) return;
   try {
+    setJointTabLoading("join", "Joining joint tab...");
     const user = cloudState.user || await refreshCloudSession();
     if (!user) throw new Error("Sign in before joining a joint tab.");
     const code = $("#jointInviteCode").value.trim().toUpperCase().replace(/\s/g, "");
@@ -2765,10 +2816,13 @@ async function joinJointTab() {
     if (!tab) throw new Error("Invite code not found.");
     ensureSharedAccount(tab);
     $("#jointInviteCode").value = "";
+    setJointTabStatus("Syncing joint tabs...");
     await syncSharedTabs(false);
+    setJointTabLoading("");
     setJointTabStatus("Joint tab joined.");
     render();
   } catch (error) {
+    setJointTabLoading("");
     setJointTabStatus(jointTabErrorMessage(error));
   }
 }
