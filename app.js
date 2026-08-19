@@ -153,7 +153,8 @@ const defaults = {
   transactions: [],
   investments: [],
   transfers: [],
-  recurringBills: []
+  recurringBills: [],
+  sharedTabs: []
 };
 
 const translations = {
@@ -166,6 +167,10 @@ const translations = {
     "Mode": "Modo",
     "Set up your money tabs": "Configure suas abas de dinheiro",
     "Create your account, choose the currencies you use, and turn on sync for your phone and computer.": "Crie sua conta, escolha as moedas que você usa e ative a sincronização no celular e no computador.",
+    "Choose your currencies first, add an optional PIN, then create your account to turn on sync.": "Escolha suas moedas primeiro, adicione um PIN opcional e depois crie sua conta para ativar a sincronização.",
+    "Create your account": "Crie sua conta",
+    "An account is required so your data can sync safely on your phone and computer.": "Uma conta é obrigatória para seus dados sincronizarem com segurança no celular e no computador.",
+    "At least 6 characters": "Pelo menos 6 caracteres",
     "Email": "E-mail",
     "Password": "Senha",
     "Create account": "Criar conta",
@@ -180,7 +185,6 @@ const translations = {
     "Code, like EUR": "Código, como EUR",
     "Use a PIN on this device": "Usar PIN neste dispositivo",
     "4 to 6 digit PIN": "PIN de 4 a 6 dígitos",
-    "Continue without account": "Continuar sem conta",
     "Enter your PIN": "Digite seu PIN",
     "PIN": "PIN",
     "Unlock": "Desbloquear",
@@ -204,6 +208,15 @@ const translations = {
     "Main currency": "Moeda principal",
     "Currency tabs": "Abas de moeda",
     "Conversion rates": "Taxas de conversão",
+    "Joint tabs": "Abas conjuntas",
+    "Create a shared tab, then send the invite code to the other person.": "Crie uma aba compartilhada e envie o código de convite para a outra pessoa.",
+    "Joint Brasil Tanya & Oliver": "Brasil conjunto Tanya e Oliver",
+    "Create joint tab": "Criar aba conjunta",
+    "Paste invite code": "Colar código de convite",
+    "Join joint tab": "Entrar na aba conjunta",
+    "No joint tabs yet": "Ainda não há abas conjuntas",
+    "Invite code": "Código de convite",
+    "Copy code": "Copiar código",
     "This is the currency used for big totals and investment totals.": "Esta é a moeda usada nos totais principais e nos totais de investimento.",
     "Main currency for totals": "Moeda principal dos totais",
     "Pick a currency below, or type your own 3-letter code.": "Escolha uma moeda abaixo ou digite seu próprio código de 3 letras.",
@@ -397,13 +410,27 @@ const translations = {
     "Enter your 4 to 6 digit PIN.": "Digite seu PIN de 4 a 6 dígitos.",
     "That PIN is not correct.": "Esse PIN não está correto.",
     "Choose at least one currency tab.": "Escolha pelo menos uma aba de moeda.",
-    "Using this device only. You can sign in later from Settings.": "Usando apenas este dispositivo. Você pode entrar depois em Configurações.",
+    "Create an account or sign in to finish setup.": "Crie uma conta ou entre para terminar a configuração.",
     "Cloud settings saved. Sign up or log in to sync.": "Configurações da nuvem salvas. Crie uma conta ou entre para sincronizar.",
     "Account created. Auto sync is on.": "Conta criada. A sincronização automática está ativada.",
     "Account created. Check your email, then sign in.": "Conta criada. Verifique seu e-mail e depois entre.",
     "Signed in. Auto sync is on.": "Você entrou. A sincronização automática está ativada.",
     "Password reset email sent. Check your inbox.": "E-mail de redefinição de senha enviado. Verifique sua caixa de entrada.",
     "Logged out. Local data is still saved on this device.": "Você saiu. Os dados locais ainda estão salvos neste dispositivo.",
+    "Sign in before creating a joint tab.": "Entre antes de criar uma aba conjunta.",
+    "Sign in before joining a joint tab.": "Entre antes de entrar em uma aba conjunta.",
+    "Sign in to save to a joint tab.": "Entre para salvar em uma aba conjunta.",
+    "Joint tabs are not set up in Supabase yet. Run the Joint tabs SQL from the README, then refresh this app.": "As abas conjuntas ainda não foram configuradas no Supabase. Rode o SQL de abas conjuntas do README e atualize este app.",
+    "Add a name for the joint tab.": "Adicione um nome para a aba conjunta.",
+    "Joint tab created. Send this invite code:": "Aba conjunta criada. Envie este código de convite:",
+    "Joint tab could not be opened after it was created.": "Não foi possível abrir a aba conjunta depois de criada.",
+    "Paste the invite code first.": "Cole o código de convite primeiro.",
+    "Invite code not found.": "Código de convite não encontrado.",
+    "Joint tab joined.": "Você entrou na aba conjunta.",
+    "Invite code copied.": "Código de convite copiado.",
+    "Added by": "Adicionado por",
+    "Shared user": "Usuário compartilhado",
+    "Joint tab": "Aba conjunta",
     "Auto-saved to cloud.": "Salvo automaticamente na nuvem.",
     "Auto-loaded cloud data.": "Dados da nuvem carregados automaticamente.",
     "Loaded cloud data onto this device.": "Dados da nuvem carregados neste dispositivo.",
@@ -645,7 +672,8 @@ function normalizeState(saved) {
     transactions: saved.transactions || [],
     investments: saved.investments || [],
     transfers: saved.transfers || [],
-    recurringBills: saved.recurringBills || []
+    recurringBills: saved.recurringBills || [],
+    sharedTabs: saved.sharedTabs || []
   };
 }
 
@@ -1502,6 +1530,7 @@ function transactionTemplate(transaction) {
       <div>
         <strong>${escapeHtml(transaction.category)}</strong>
         <p>${formatDate(transaction.date)} - ${countryName(recordCountry(transaction))} - ${escapeHtml(transaction.currency)}</p>
+        ${transaction.sharedBy ? `<p>Added by ${escapeHtml(transaction.sharedBy)}</p>` : ""}
         ${transaction.paymentMethod ? `<p>${escapeHtml(transaction.paymentMethod)}</p>` : ""}
         <p>Rate: 1 ${transaction.currency} = ${rateForTransaction(transaction).toFixed(4)} ${state.mainCurrency}</p>
       </div>
@@ -1549,6 +1578,7 @@ function renderSettings() {
     : "Manual rates are being used.";
   renderAccountList();
   renderExchangeRateList();
+  renderJointTabs();
   renderEditableList("incomeSourceList", state.incomeSources, "income");
   renderEditableList("expenseCategoryList", state.expenseCategories, "expense");
   renderRecurringBills();
@@ -1614,6 +1644,42 @@ function renderExchangeRateList() {
   `).join("");
 }
 
+function renderJointTabs() {
+  if ($("#jointTabCurrency")) $("#jointTabCurrency").innerHTML = currencyOptionsTemplate(state.mainCurrency, true);
+  const sharedAccounts = allAccounts().filter((account) => account.sharedTabId);
+  const list = $("#jointTabList");
+  if (!list) return;
+  list.innerHTML = sharedAccounts.length ? sharedAccounts.map((account) => `
+    <div class="account-setting-row joint-row">
+      <div>
+        <strong>${escapeHtml(account.name)}</strong>
+        <p>${escapeHtml(account.currency)} · Invite code ${escapeHtml(account.inviteCode || "")}</p>
+      </div>
+      <button data-copy-invite="${escapeAttr(account.inviteCode || "")}">Copy code</button>
+    </div>
+  `).join("") : `<p class="eyebrow">No joint tabs yet</p>`;
+}
+
+function setJointTabStatus(message) {
+  const status = $("#jointTabStatus");
+  if (status) status.textContent = translateText(message);
+}
+
+function jointTabErrorMessage(error) {
+  const message = String(error?.message || error || "");
+  if (
+    message.includes("shared_tabs") ||
+    message.includes("shared_tab_members") ||
+    message.includes("shared_tab_records") ||
+    message.includes("my_shared_tabs") ||
+    message.includes("join_shared_tab") ||
+    message.includes("schema cache")
+  ) {
+    return "Joint tabs are not set up in Supabase yet. Run the Joint tabs SQL from the README, then refresh this app.";
+  }
+  return message;
+}
+
 function accountHasRecords(accountId) {
   return state.transactions.some((transaction) => recordCountry(transaction) === accountId) ||
     state.investments.some((investment) => investmentCountry(investment) === accountId) ||
@@ -1630,6 +1696,22 @@ function currencyHasRecords(currency) {
 
 function accountIdFromNameAndCode(name, code) {
   return `${name || code}`.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || `account-${Date.now()}`;
+}
+
+function sharedAccountId(tabId) {
+  return `shared-${tabId}`;
+}
+
+function isSharedAccount(accountId) {
+  return Boolean(allAccounts().find((account) => account.id === accountId)?.sharedTabId);
+}
+
+function sharedTabForAccount(accountId) {
+  return allAccounts().find((account) => account.id === accountId);
+}
+
+function generateInviteCode() {
+  return crypto.randomUUID().replaceAll("-", "").slice(0, 12).toUpperCase();
 }
 
 function compactCurrencyText(value) {
@@ -1993,7 +2075,7 @@ function rateForTransaction(transaction) {
   return Number(transaction.exchangeRateToCAD) / Number(state.ratesToCAD[state.mainCurrency]);
 }
 
-function saveTransaction(event) {
+async function saveTransaction(event) {
   event.preventDefault();
   const id = $("#editingId").value || crypto.randomUUID();
   const kind = $("#transactionKind").value;
@@ -2012,12 +2094,31 @@ function saveTransaction(event) {
     note: $("#noteInput").value.trim(),
     exchangeRateToCAD
   };
+  const oldTransaction = state.transactions.find((item) => item.id === id);
+  if (isSharedAccount(transaction.country)) {
+    const user = cloudState.user || await refreshCloudSession();
+    transaction.sharedBy = user?.email || "Shared user";
+  }
 
   if (!transaction.amount || transaction.amount <= 0) return;
+
+  if (oldTransaction && recordCountry(oldTransaction) !== recordCountry(transaction)) {
+    try {
+      await deleteSharedTransaction(oldTransaction);
+    } catch (error) {
+      setJointTabStatus(jointTabErrorMessage(error));
+    }
+  }
 
   const index = state.transactions.findIndex((item) => item.id === id);
   if (index >= 0) state.transactions[index] = transaction;
   else state.transactions.unshift(transaction);
+
+  try {
+    await saveSharedTransaction(transaction);
+  } catch (error) {
+    setJointTabStatus(jointTabErrorMessage(error));
+  }
 
   closeDialog($("#transactionDialog"));
   render();
@@ -2415,6 +2516,9 @@ function setSetupStatus(message) {
 
 async function finishFirstSetup(mode) {
   try {
+    if (mode !== "signup" && mode !== "login") {
+      throw new Error("Create an account or sign in to finish setup.");
+    }
     setupSelectedAccounts();
     const wantsPin = $("#setupPinEnabled").checked;
     const pinSaved = await updatePinSetting(wantsPin, $("#setupPin").value, "#setupStatus");
@@ -2427,12 +2531,6 @@ async function finishFirstSetup(mode) {
       await signUpCloud(true);
     } else if (mode === "login") {
       await loginCloud(true);
-    } else {
-      setupComplete = true;
-      localStorage.setItem("makeSpendSetupComplete", "true");
-      appUnlocked = true;
-      render();
-      setCloudStatus("Using this device only. You can sign in later from Settings.");
     }
   } catch (error) {
     setSetupStatus(error.message);
@@ -2506,6 +2604,7 @@ async function finishCloudLogin(successMessage = "Signed in. Auto sync is on.") 
   startCloudPolling();
   const loaded = await loadCloudData(true);
   if (!loaded) await saveCloudData(true);
+  await syncSharedTabs(false);
   setCloudStatus(successMessage);
 }
 
@@ -2592,6 +2691,155 @@ async function logoutCloud() {
   setCloudStatus("Logged out. Local data is still saved on this device.");
 }
 
+function ensureSharedAccount(tab) {
+  const id = sharedAccountId(tab.id);
+  const currency = tab.currency || "BRL";
+  if (!state.currencySettings[currency]) state.currencySettings[currency] = knownCurrencies[currency] || { name: currency, symbol: `${currency} ` };
+  if (!Number(state.ratesToCAD[currency])) state.ratesToCAD[currency] = currency === "CAD" ? 1 : 1;
+  const accounts = allAccounts();
+  const accountData = {
+    id,
+    name: tab.name || "Joint tab",
+    currency,
+    active: true,
+    sharedTabId: tab.id,
+    inviteCode: tab.invite_code || tab.inviteCode || ""
+  };
+  const existing = accounts.find((account) => account.id === id);
+  state.accounts = existing
+    ? accounts.map((account) => account.id === id ? { ...account, ...accountData } : account)
+    : [...accounts, accountData];
+  if (!state.accountSettings[id]) state.accountSettings[id] = { startingBalance: 0, homeCollapsed: false, reportsCollapsed: false };
+  return accountData;
+}
+
+function privateStateForCloud() {
+  const sharedAccountIds = new Set(allAccounts().filter((account) => account.sharedTabId).map((account) => account.id));
+  const accountSettings = { ...state.accountSettings };
+  sharedAccountIds.forEach((id) => delete accountSettings[id]);
+  return {
+    ...state,
+    accounts: state.accounts.filter((account) => !account.sharedTabId),
+    accountSettings,
+    transactions: state.transactions.filter((transaction) => !sharedAccountIds.has(recordCountry(transaction))),
+    sharedTabs: []
+  };
+}
+
+async function createJointTab() {
+  try {
+    const user = cloudState.user || await refreshCloudSession();
+    if (!user) throw new Error("Sign in before creating a joint tab.");
+    const name = $("#jointTabName").value.trim();
+    const currency = $("#jointTabCurrency").value || state.mainCurrency;
+    if (!name) throw new Error("Add a name for the joint tab.");
+    const client = getSupabaseClient();
+    const inviteCode = generateInviteCode();
+    const { error } = await client
+      .from("shared_tabs")
+      .insert({ name, currency, invite_code: inviteCode, created_by: user.id });
+    if (error) throw error;
+    const { data: joinedTabs, error: memberError } = await client.rpc("join_shared_tab", { invite_code_input: inviteCode });
+    if (memberError) throw memberError;
+    const joinedTab = Array.isArray(joinedTabs) ? joinedTabs[0] : joinedTabs;
+    if (!joinedTab) throw new Error("Joint tab could not be opened after it was created.");
+    ensureSharedAccount(joinedTab);
+    $("#jointTabName").value = "";
+    setJointTabStatus(`Joint tab created. Send this invite code: ${inviteCode}`);
+    render();
+  } catch (error) {
+    setJointTabStatus(jointTabErrorMessage(error));
+  }
+}
+
+async function joinJointTab() {
+  try {
+    const user = cloudState.user || await refreshCloudSession();
+    if (!user) throw new Error("Sign in before joining a joint tab.");
+    const code = $("#jointInviteCode").value.trim().toUpperCase().replace(/\s/g, "");
+    if (!code) throw new Error("Paste the invite code first.");
+    const client = getSupabaseClient();
+    const { data, error } = await client.rpc("join_shared_tab", { invite_code_input: code });
+    if (error) throw error;
+    const tab = Array.isArray(data) ? data[0] : data;
+    if (!tab) throw new Error("Invite code not found.");
+    ensureSharedAccount(tab);
+    $("#jointInviteCode").value = "";
+    await syncSharedTabs(false);
+    setJointTabStatus("Joint tab joined.");
+    render();
+  } catch (error) {
+    setJointTabStatus(jointTabErrorMessage(error));
+  }
+}
+
+async function syncSharedTabs(shouldRender = true) {
+  if (!cloudState.user) return false;
+  try {
+    const client = getSupabaseClient();
+    const { data: tabs, error } = await client.rpc("my_shared_tabs");
+    if (error) throw error;
+    const sharedTabs = tabs || [];
+    state.sharedTabs = sharedTabs;
+    const sharedAccountIds = new Set(sharedTabs.map((tab) => sharedAccountId(tab.id)));
+    const oldSharedAccountIds = new Set(allAccounts().filter((account) => account.sharedTabId).map((account) => account.id));
+    state.accounts = allAccounts().filter((account) => !account.sharedTabId || sharedAccountIds.has(account.id));
+    oldSharedAccountIds.forEach((id) => {
+      if (!sharedAccountIds.has(id)) delete state.accountSettings[id];
+    });
+    sharedTabs.forEach(ensureSharedAccount);
+    state.transactions = state.transactions.filter((transaction) => !oldSharedAccountIds.has(recordCountry(transaction)));
+    if (sharedTabs.length) {
+      const { data: rows, error: recordError } = await client
+        .from("shared_tab_records")
+        .select("id, tab_id, record, updated_at")
+        .in("tab_id", sharedTabs.map((tab) => tab.id));
+      if (recordError) throw recordError;
+      (rows || []).forEach((row) => {
+        state.transactions.push({
+          ...row.record,
+          id: row.id,
+          country: sharedAccountId(row.tab_id),
+          sharedTabId: row.tab_id
+        });
+      });
+    }
+    if (shouldRender) render();
+    return true;
+  } catch (error) {
+    setJointTabStatus(jointTabErrorMessage(error));
+    return false;
+  }
+}
+
+async function saveSharedTransaction(transaction) {
+  const account = sharedTabForAccount(recordCountry(transaction));
+  if (!account?.sharedTabId) return;
+  const user = cloudState.user || await refreshCloudSession();
+  if (!user) throw new Error("Sign in to save to a joint tab.");
+  const client = getSupabaseClient();
+  const { error } = await client
+    .from("shared_tab_records")
+    .upsert({
+      id: transaction.id,
+      tab_id: account.sharedTabId,
+      created_by: user.id,
+      record: { ...transaction, sharedTabId: account.sharedTabId },
+      updated_at: new Date().toISOString()
+    }, { onConflict: "id" });
+  if (error) throw error;
+}
+
+async function deleteSharedTransaction(transaction) {
+  const account = sharedTabForAccount(recordCountry(transaction));
+  if (!account?.sharedTabId) return;
+  const user = cloudState.user || await refreshCloudSession();
+  if (!user) throw new Error("Sign in to save to a joint tab.");
+  const client = getSupabaseClient();
+  const { error } = await client.from("shared_tab_records").delete().eq("id", transaction.id);
+  if (error) throw error;
+}
+
 function queueCloudSave() {
   if (!cloudState.enabled || cloudState.loading || cloudState.saving || !cloudState.user || !cloudState.client) return;
   clearTimeout(cloudSaveTimer);
@@ -2609,7 +2857,7 @@ async function saveCloudData(silent = false) {
     const updatedAt = new Date().toISOString();
     const { error } = await client
       .from("user_app_data")
-      .upsert({ user_id: user.id, data: state, updated_at: updatedAt }, { onConflict: "user_id" });
+      .upsert({ user_id: user.id, data: privateStateForCloud(), updated_at: updatedAt }, { onConflict: "user_id" });
     if (error) throw error;
     cloudState.enabled = true;
     cloudState.lastUpdatedAt = updatedAt;
@@ -2647,6 +2895,7 @@ async function loadCloudData(silent = false) {
     cloudState.lastUpdatedAt = data.updated_at || new Date().toISOString();
     localStorage.setItem("makeSpendCloudEnabled", "true");
     localStorage.setItem("makeSpendCloudUpdatedAt", cloudState.lastUpdatedAt);
+    await syncSharedTabs(false);
     render();
     setCloudStatus(silent ? "Auto-loaded cloud data." : "Loaded cloud data onto this device.");
     startCloudPolling();
@@ -2670,15 +2919,23 @@ async function pullLatestCloudData() {
       .select("data, updated_at")
       .eq("user_id", user.id)
       .maybeSingle();
-    if (error || !data?.data || !data.updated_at) return;
+    if (error || !data?.data || !data.updated_at) {
+      cloudState.loading = true;
+      await syncSharedTabs(true);
+      return;
+    }
     if (!cloudState.lastUpdatedAt || new Date(data.updated_at) > new Date(cloudState.lastUpdatedAt)) {
       cloudState.loading = true;
       state = normalizeState(data.data);
       cloudState.lastUpdatedAt = data.updated_at;
       localStorage.setItem("makeSpendCloudUpdatedAt", data.updated_at);
+      await syncSharedTabs(false);
       render();
       setCloudStatus("Loaded new cloud data from your other device.");
+      return;
     }
+    cloudState.loading = true;
+    await syncSharedTabs(true);
   } finally {
     cloudState.loading = false;
   }
@@ -2698,6 +2955,7 @@ async function initCloud() {
     await refreshCloudSession();
     if (cloudState.user) {
       startCloudPolling();
+      await syncSharedTabs(false);
       if (cloudState.enabled) pullLatestCloudData();
     }
     renderCloudStatus();
@@ -2724,7 +2982,7 @@ function escapeAttr(value) {
   return escapeHtml(value).replaceAll("`", "&#096;");
 }
 
-document.addEventListener("click", (event) => {
+document.addEventListener("click", async (event) => {
   const target = event.target.closest("button, [data-open-form]");
   if (!target) return;
 
@@ -2765,6 +3023,14 @@ document.addEventListener("click", (event) => {
   }
   if (target.dataset.delete) {
     if (!confirm("Delete this transaction?")) return;
+    const transaction = state.transactions.find((item) => item.id === target.dataset.delete);
+    if (transaction) {
+      try {
+        await deleteSharedTransaction(transaction);
+      } catch (error) {
+        setJointTabStatus(jointTabErrorMessage(error));
+      }
+    }
     state.transactions = state.transactions.filter((item) => item.id !== target.dataset.delete);
     render();
   }
@@ -2802,6 +3068,12 @@ document.addEventListener("click", (event) => {
   if (target.dataset.toggleHomeAccount) toggleHomeAccount(target.dataset.toggleHomeAccount);
   if (target.dataset.toggleReportAccount) toggleReportAccount(target.dataset.toggleReportAccount);
   if (target.dataset.currencyPreset) fillCurrencyFields(target.dataset.currencyPreset, true);
+  if (target.id === "createJointTab") createJointTab();
+  if (target.id === "joinJointTab") joinJointTab();
+  if (target.dataset.copyInvite) {
+    await navigator.clipboard?.writeText(target.dataset.copyInvite);
+    setJointTabStatus("Invite code copied.");
+  }
 });
 
 document.addEventListener("change", (event) => {
@@ -2938,7 +3210,6 @@ $("#loadCloudData")?.addEventListener("click", () => loadCloudData(false));
 $("#setupSignUp").addEventListener("click", () => finishFirstSetup("signup"));
 $("#setupSignIn").addEventListener("click", () => finishFirstSetup("login"));
 $("#setupPasswordReset").addEventListener("click", () => resetPasswordCloud(true));
-$("#setupLocalOnly").addEventListener("click", () => finishFirstSetup("local"));
 $("#setupCustomCode").addEventListener("input", (event) => {
   event.target.value = event.target.value.toUpperCase();
 });

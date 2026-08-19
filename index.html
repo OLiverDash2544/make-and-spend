@@ -15,17 +15,7 @@
       <div class="startup-card">
         <p class="eyebrow">Make & Spend</p>
         <h1>Set up your money tabs</h1>
-        <p class="startup-copy">Create your account, choose the currencies you use, and turn on sync for your phone and computer.</p>
-
-        <div class="startup-form">
-          <label>Email</label>
-          <input id="setupEmail" type="email" autocomplete="email" placeholder="you@example.com">
-          <label>Password</label>
-          <input id="setupPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters">
-          <button id="setupSignUp" class="primary save" type="button">Create account</button>
-          <button id="setupSignIn" type="button">I already have an account</button>
-          <button id="setupPasswordReset" class="text-button" type="button">Forgot password?</button>
-        </div>
+        <p class="startup-copy">Choose your currencies first, add an optional PIN, then create your account to turn on sync.</p>
 
         <div class="setup-block">
           <h2>Choose currency tabs</h2>
@@ -47,8 +37,19 @@
         </label>
         <input id="setupPin" class="pin-input" inputmode="numeric" type="password" autocomplete="off" maxlength="6" placeholder="4 to 6 digit PIN">
 
+        <div class="startup-form account-last">
+          <h2>Create your account</h2>
+          <p class="status-text">An account is required so your data can sync safely on your phone and computer.</p>
+          <label>Email</label>
+          <input id="setupEmail" type="email" autocomplete="email" placeholder="you@example.com">
+          <label>Password</label>
+          <input id="setupPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters">
+          <button id="setupSignUp" class="primary save" type="button">Create account</button>
+          <button id="setupSignIn" type="button">I already have an account</button>
+          <button id="setupPasswordReset" class="text-button" type="button">Forgot password?</button>
+        </div>
+
         <p class="status-text" id="setupStatus"></p>
-        <button id="setupLocalOnly" class="text-button" type="button">Continue without account</button>
       </div>
     </section>
 
@@ -267,6 +268,22 @@
                 </div>
                 <p class="status-text" id="currencyAddStatus"></p>
                 <div id="accountList" class="editable-list"></div>
+              </section>
+
+              <section class="panel">
+                <h2>Joint tabs</h2>
+                <p class="status-text">Create a shared tab, then send the invite code to the other person.</p>
+                <div class="joint-form">
+                  <input id="jointTabName" placeholder="Joint Brasil Tanya & Oliver">
+                  <select id="jointTabCurrency"></select>
+                  <button id="createJointTab" type="button">Create joint tab</button>
+                </div>
+                <div class="joint-form">
+                  <input id="jointInviteCode" placeholder="Paste invite code">
+                  <button id="joinJointTab" type="button">Join joint tab</button>
+                </div>
+                <p class="status-text" id="jointTabStatus"></p>
+                <div id="jointTabList" class="editable-list"></div>
               </section>
               </div>
             </section>
