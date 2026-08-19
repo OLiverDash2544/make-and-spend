@@ -11,6 +11,57 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
+    <section class="startup-screen" id="setupGate" hidden>
+      <div class="startup-card">
+        <p class="eyebrow">Make & Spend</p>
+        <h1>Set up your money tabs</h1>
+        <p class="startup-copy">Create your account, choose the currencies you use, and turn on sync for your phone and computer.</p>
+
+        <div class="startup-form">
+          <label>Email</label>
+          <input id="setupEmail" type="email" autocomplete="email" placeholder="you@example.com">
+          <label>Password</label>
+          <input id="setupPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters">
+          <button id="setupSignUp" class="primary save" type="button">Create account</button>
+          <button id="setupSignIn" type="button">I already have an account</button>
+          <button id="setupPasswordReset" class="text-button" type="button">Forgot password?</button>
+        </div>
+
+        <div class="setup-block">
+          <h2>Choose currency tabs</h2>
+          <div class="setup-currency-grid">
+            <label><input type="checkbox" data-setup-currency="CAD" checked> Canada CAD</label>
+            <label><input type="checkbox" data-setup-currency="BRL" checked> Brasil BRL</label>
+            <label><input type="checkbox" data-setup-currency="USD"> United States USD</label>
+            <label><input type="checkbox" data-setup-currency="JPY"> Japan JPY</label>
+          </div>
+          <div class="setup-custom-currency">
+            <input id="setupCustomName" placeholder="Other tab name">
+            <input id="setupCustomCode" placeholder="Code, like EUR" maxlength="20">
+          </div>
+        </div>
+
+        <label class="check-row setup-pin-row">
+          <input id="setupPinEnabled" type="checkbox">
+          <span>Use a PIN on this device</span>
+        </label>
+        <input id="setupPin" class="pin-input" inputmode="numeric" type="password" autocomplete="off" maxlength="6" placeholder="4 to 6 digit PIN">
+
+        <p class="status-text" id="setupStatus"></p>
+        <button id="setupLocalOnly" class="text-button" type="button">Continue without account</button>
+      </div>
+    </section>
+
+    <section class="startup-screen pin-lock" id="pinLock" hidden>
+      <div class="startup-card">
+        <p class="eyebrow">Make & Spend</p>
+        <h1>Enter your PIN</h1>
+        <input id="unlockPin" class="pin-input" inputmode="numeric" type="password" autocomplete="off" maxlength="6" placeholder="PIN">
+        <button id="unlockPinButton" class="primary save" type="button">Unlock</button>
+        <p class="status-text" id="pinStatus"></p>
+      </div>
+    </section>
+
     <main class="app-shell">
       <section class="screen active" id="homeScreen">
         <header class="topbar">
@@ -110,129 +161,224 @@
           </div>
         </header>
 
-        <section class="panel">
-          <label>Main currency for totals</label>
-          <select id="mainCurrency"></select>
-        </section>
+        <div class="settings-accordion">
+          <section class="settings-panel open" data-settings-panel="account">
+            <button class="settings-category-head" type="button" data-settings-tab="account">
+              <span>Account</span>
+              <strong>Show</strong>
+            </button>
+            <div class="settings-panel-body">
+            <section class="panel account-panel">
+              <h2>Account info</h2>
+              <p class="status-text">Sign in once and the app syncs automatically on your phone and computer.</p>
+              <label>Email</label>
+              <input id="syncEmail" type="email" autocomplete="email" placeholder="you@example.com">
+              <label>Password</label>
+              <input id="syncPassword" type="password" autocomplete="current-password">
+              <div class="cloud-actions">
+                <button id="signUpCloud" type="button">Create account</button>
+                <button id="loginCloud" type="button">Sign in</button>
+                <button id="logoutCloud" type="button">Sign out</button>
+              </div>
+              <button id="resetPasswordCloud" class="text-button" type="button">Forgot password?</button>
+              <p class="status-text" id="cloudStatus">Cloud sync is not connected yet.</p>
+            </section>
 
-        <section class="panel">
-          <h2>Currency tabs</h2>
-          <p class="helper-text">Pick a currency below, or type your own 3-letter code.</p>
-          <div class="currency-presets" id="currencyPresets">
-            <button type="button" data-currency-preset="USD">US dollar</button>
-            <button type="button" data-currency-preset="EUR">Euro</button>
-            <button type="button" data-currency-preset="JPY">Japan yen</button>
-            <button type="button" data-currency-preset="GBP">British pound</button>
-            <button type="button" data-currency-preset="MXN">Mexico peso</button>
-            <button type="button" data-currency-preset="ARS">Argentina peso</button>
-            <button type="button" data-currency-preset="CLP">Chile peso</button>
-            <button type="button" data-currency-preset="COP">Colombia peso</button>
-          </div>
-          <div class="currency-form">
-            <input id="newAccountName" placeholder="Tab name, like United States">
-            <input id="newCurrencyCode" placeholder="Code, like USD or JPY" maxlength="20">
-            <input id="newCurrencyName" placeholder="Currency name">
-            <input id="newCurrencySymbol" placeholder="Symbol, like $">
-            <input id="newCurrencyRate" inputmode="decimal" type="text" autocomplete="off" placeholder="Exchange rate, optional">
-            <input id="newAccountStartingBalance" inputmode="decimal" type="text" autocomplete="off" placeholder="Starting balance">
-            <button id="addCurrencyAccount" type="button">Add currency tab</button>
-          </div>
-          <p class="status-text" id="currencyAddStatus"></p>
-          <div id="accountList" class="editable-list"></div>
-        </section>
+            <section class="panel">
+              <h2>PIN lock</h2>
+              <label class="check-row">
+                <input id="pinEnabled" type="checkbox">
+                <span>Ask for a PIN when this app opens</span>
+              </label>
+              <input id="pinInput" class="pin-input" inputmode="numeric" type="password" autocomplete="off" maxlength="6" placeholder="4 to 6 digit PIN">
+              <button id="savePinSettings" type="button">Save PIN setting</button>
+              <p class="status-text" id="pinSettingsStatus">PIN is optional and only protects this device.</p>
+            </section>
+            </div>
+          </section>
 
-        <section class="panel">
-          <h2>Exchange rates to CAD</h2>
-          <button id="refreshRates" class="rate-refresh" type="button">Update online rates</button>
-          <p class="status-text" id="rateStatus">Manual rates are being used.</p>
-          <div id="exchangeRateList" class="editable-list"></div>
-        </section>
+          <section class="settings-panel" data-settings-panel="language">
+            <button class="settings-category-head" type="button" data-settings-tab="language">
+              <span>Language</span>
+              <strong>Show</strong>
+            </button>
+            <div class="settings-panel-body">
+              <section class="panel">
+                <h2>Language</h2>
+                <p class="status-text">Choose the language for the app.</p>
+                <label>App language</label>
+                <select id="languageSelect">
+                  <option value="en">English</option>
+                  <option value="pt">Portuguese</option>
+                </select>
+              </section>
+            </div>
+          </section>
 
-        <section class="panel">
-          <h2>Income sources</h2>
-          <div class="add-line">
-            <input id="newIncomeSource" placeholder="New source">
-            <button data-add-list="income">Add</button>
-          </div>
-          <div id="incomeSourceList" class="editable-list"></div>
-        </section>
+          <section class="settings-panel" data-settings-panel="money">
+            <button class="settings-category-head" type="button" data-settings-tab="money">
+              <span>Money setup</span>
+              <strong>Show</strong>
+            </button>
+            <div class="settings-panel-body">
 
-        <section class="panel">
-          <h2>Expense categories</h2>
-          <div class="add-line">
-            <input id="newExpenseCategory" placeholder="New category">
-            <button data-add-list="expense">Add</button>
-          </div>
-          <div id="expenseCategoryList" class="editable-list"></div>
-        </section>
+            <section class="money-settings-panel open" data-money-settings-panel="main">
+              <button class="settings-category-head nested" type="button" data-money-settings-tab="main">
+                <span>Main currency</span>
+                <strong>Show</strong>
+              </button>
+              <div class="money-settings-body">
+              <section class="panel">
+                <h2>Main currency</h2>
+                <p class="status-text">This is the currency used for big totals and investment totals.</p>
+                <label>Main currency for totals</label>
+                <select id="mainCurrency"></select>
+              </section>
+              </div>
+            </section>
 
-        <section class="panel">
-          <h2>Recurring reminders</h2>
-          <div class="recurring-form">
-            <input id="recurringName" placeholder="Bill name">
-            <input id="recurringAmount" inputmode="decimal" type="text" autocomplete="off" placeholder="Amount">
-            <select id="recurringCurrency"></select>
-            <select id="recurringCountry"></select>
-            <select id="recurringCategory"></select>
-            <input id="recurringDay" inputmode="numeric" type="text" autocomplete="off" placeholder="Day 1-31">
-            <button id="addRecurringBill" type="button">Add reminder</button>
-          </div>
-          <div id="recurringBillList" class="editable-list"></div>
-        </section>
+            <section class="money-settings-panel" data-money-settings-panel="currencies">
+              <button class="settings-category-head nested" type="button" data-money-settings-tab="currencies">
+                <span>Currency tabs</span>
+                <strong>Show</strong>
+              </button>
+              <div class="money-settings-body">
+              <section class="panel">
+                <h2>Currency tabs</h2>
+                <p class="helper-text">Pick a currency below, or type your own 3-letter code.</p>
+                <div class="currency-presets" id="currencyPresets">
+                  <button type="button" data-currency-preset="USD">US dollar</button>
+                  <button type="button" data-currency-preset="EUR">Euro</button>
+                  <button type="button" data-currency-preset="JPY">Japan yen</button>
+                  <button type="button" data-currency-preset="GBP">British pound</button>
+                  <button type="button" data-currency-preset="MXN">Mexico peso</button>
+                  <button type="button" data-currency-preset="ARS">Argentina peso</button>
+                  <button type="button" data-currency-preset="CLP">Chile peso</button>
+                  <button type="button" data-currency-preset="COP">Colombia peso</button>
+                </div>
+                <div class="currency-form">
+                  <input id="newAccountName" placeholder="Tab name, like United States">
+                  <input id="newCurrencyCode" placeholder="Code, like USD or JPY" maxlength="20">
+                  <input id="newCurrencyName" placeholder="Currency name">
+                  <input id="newCurrencySymbol" placeholder="Symbol, like $">
+                  <input id="newCurrencyRate" inputmode="decimal" type="text" autocomplete="off" placeholder="Exchange rate, optional">
+                  <input id="newAccountStartingBalance" inputmode="decimal" type="text" autocomplete="off" placeholder="Starting balance">
+                  <button id="addCurrencyAccount" type="button">Add currency tab</button>
+                </div>
+                <p class="status-text" id="currencyAddStatus"></p>
+                <div id="accountList" class="editable-list"></div>
+              </section>
+              </div>
+            </section>
 
-        <section class="panel">
-          <h2>Chart colors</h2>
-          <div id="categoryColorList" class="color-key"></div>
-        </section>
+            <section class="money-settings-panel" data-money-settings-panel="rates">
+              <button class="settings-category-head nested" type="button" data-money-settings-tab="rates">
+                <span>Conversion rates</span>
+                <strong>Show</strong>
+              </button>
+              <div class="money-settings-body">
+              <section class="panel">
+                <h2>Conversion rates</h2>
+                <button id="refreshRates" class="rate-refresh" type="button">Update online rates</button>
+                <p class="status-text" id="rateStatus">Manual rates are being used.</p>
+                <div id="exchangeRateList" class="editable-list"></div>
+              </section>
+              </div>
+            </section>
+            </div>
+          </section>
 
-        <section class="panel">
-          <h2>Payment methods</h2>
-          <div class="add-line">
-            <input id="newPaymentMethod" placeholder="New payment method">
-            <button data-add-list="payment">Add</button>
-          </div>
-          <div id="paymentMethodList" class="editable-list"></div>
-        </section>
+          <section class="settings-panel" data-settings-panel="lists">
+            <button class="settings-category-head" type="button" data-settings-tab="lists">
+              <span>Lists</span>
+              <strong>Show</strong>
+            </button>
+            <div class="settings-panel-body">
+            <section class="panel">
+              <h2>Income sources</h2>
+              <div class="add-line">
+                <input id="newIncomeSource" placeholder="New source">
+                <button data-add-list="income">Add</button>
+              </div>
+              <div id="incomeSourceList" class="editable-list"></div>
+            </section>
 
-        <section class="panel">
-          <h2>Cloud sync</h2>
-          <p class="status-text">Use the same data on your phone and computer with your Supabase login.</p>
-          <label>Supabase project URL</label>
-          <input id="supabaseUrl" inputmode="url" placeholder="https://your-project.supabase.co">
-          <label>Publishable key</label>
-          <input id="supabaseKey" autocomplete="off">
-          <button id="saveCloudSettings" class="rate-refresh" type="button">Save cloud settings</button>
+            <section class="panel">
+              <h2>Expense categories</h2>
+              <div class="add-line">
+                <input id="newExpenseCategory" placeholder="New category">
+                <button data-add-list="expense">Add</button>
+              </div>
+              <div id="expenseCategoryList" class="editable-list"></div>
+            </section>
 
-          <div class="settings-divider"></div>
-          <h3 class="settings-subtitle">Sign in</h3>
-          <label>Email</label>
-          <input id="syncEmail" type="email" autocomplete="email" placeholder="you@example.com">
-          <label>Password</label>
-          <input id="syncPassword" type="password" autocomplete="current-password">
-          <div class="cloud-actions">
-            <button id="signUpCloud" type="button">Sign up</button>
-            <button id="loginCloud" type="button">Sign in</button>
-            <button id="logoutCloud" type="button">Sign out</button>
-          </div>
-          <div class="settings-divider"></div>
-          <h3 class="settings-subtitle">Sync data</h3>
-          <div class="cloud-actions">
-            <button id="saveCloudData" type="button">Save this device to cloud</button>
-            <button id="loadCloudData" type="button">Load cloud data</button>
-          </div>
-          <p class="status-text" id="cloudStatus">Cloud sync is not connected yet.</p>
-        </section>
+            <section class="panel">
+              <h2>Payment methods</h2>
+              <div class="add-line">
+                <input id="newPaymentMethod" placeholder="New payment method">
+                <button data-add-list="payment">Add</button>
+              </div>
+              <div id="paymentMethodList" class="editable-list"></div>
+            </section>
+            </div>
+          </section>
 
-        <section class="panel">
-          <h2>Backup</h2>
-          <button id="exportCsv">Export CSV</button>
-          <button id="exportBackup">Export full backup</button>
-          <label class="file-label">
-            Import full backup
-            <input id="importBackup" type="file" accept="application/json">
-          </label>
-          <p class="status-text" id="backupStatus">A full backup saves transactions, investments, reminders, categories, colors, and settings.</p>
-        </section>
+          <section class="settings-panel" data-settings-panel="reminders">
+            <button class="settings-category-head" type="button" data-settings-tab="reminders">
+              <span>Recurring bills</span>
+              <strong>Show</strong>
+            </button>
+            <div class="settings-panel-body">
+            <section class="panel">
+              <h2>Recurring bills</h2>
+              <p class="status-text">Keep bills here for now. They show on Home under upcoming reminders.</p>
+              <div class="recurring-form">
+                <input id="recurringName" placeholder="Bill name">
+                <input id="recurringAmount" inputmode="decimal" type="text" autocomplete="off" placeholder="Amount">
+                <select id="recurringCurrency"></select>
+                <select id="recurringCountry"></select>
+                <select id="recurringCategory"></select>
+                <input id="recurringDay" inputmode="numeric" type="text" autocomplete="off" placeholder="Day 1-31">
+                <button id="addRecurringBill" type="button">Add reminder</button>
+              </div>
+              <div id="recurringBillList" class="editable-list"></div>
+            </section>
+            </div>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="colors">
+            <button class="settings-category-head" type="button" data-settings-tab="colors">
+              <span>Chart colors</span>
+              <strong>Show</strong>
+            </button>
+            <div class="settings-panel-body">
+            <section class="panel">
+              <h2>Chart colors</h2>
+              <p class="status-text">Change the colors used in your earning and spending bars.</p>
+              <div id="categoryColorList" class="color-key"></div>
+            </section>
+            </div>
+          </section>
+
+          <section class="settings-panel" data-settings-panel="backup">
+            <button class="settings-category-head" type="button" data-settings-tab="backup">
+              <span>Backup</span>
+              <strong>Show</strong>
+            </button>
+            <div class="settings-panel-body">
+            <section class="panel">
+              <h2>Backup</h2>
+              <button id="exportCsv">Export CSV</button>
+              <button id="exportBackup">Export full backup</button>
+              <label class="file-label">
+                Import full backup
+                <input id="importBackup" type="file" accept="application/json">
+              </label>
+              <p class="status-text" id="backupStatus">A full backup saves transactions, investments, reminders, categories, colors, and settings.</p>
+            </section>
+            </div>
+          </section>
+        </div>
       </section>
 
       <nav class="tabs">

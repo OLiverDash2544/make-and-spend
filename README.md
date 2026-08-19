@@ -6,11 +6,15 @@ It runs as a simple iPhone-sized web app and stores data locally in the browser.
 
 The app uses four simple tabs: Home, Transactions, Reports, and Settings. Currency tabs appear as account cards inside Home. The app starts with Canada/CAD and Brasil/BRL, and you can add USD or another currency in Settings.
 
+On a new device, the first screen is a simple setup screen. It lets the user create an account or sign in, choose Canada, Brasil, United States, Japan, or another currency tab, and optionally set a 4 to 6 digit PIN for that device.
+
 Real account balances carry forward. Monthly income, spending, transfer fees, and investment totals reset for each month, but money left over stays in the account balance. You can set starting balances for each currency tab in Settings.
 
 The **Reports** tab keeps month and year records, with separate report sections for each active currency tab. Each report stays in that tab's currency without converting the report section into another currency.
 
-Settings includes **Currency tabs**. You can add a currency tab, choose its code/name/symbol, set its CAD exchange rate, show or hide tabs, and delete empty tabs. Tabs with old records can be hidden instead of deleted so the old data stays safe.
+Settings is split into simple open/close categories: Account, Language, Money, Lists, Reminders, Colors, and Backup. The Money category has smaller open/close sections for Main currency, Currency tabs, and Conversion rates. You can add a currency tab, choose its code/name/symbol, set its CAD exchange rate, show or hide tabs, and delete empty tabs. Tabs with old records can be hidden instead of deleted so the old data stays safe.
+
+The **Language** category lets the user switch the app between English and Portuguese. The selected language is saved and reused after refresh.
 
 The **Transactions** tab shows all money records in one searchable list, including income, expenses, investments, and transfers. You can filter by record type, category/source, and currency.
 
@@ -67,7 +71,7 @@ Investments can be assigned to a currency tab. By default, investment money is d
 
 ## Cloud Sync
 
-Settings includes **Cloud sync** for using the same data on phone and computer with Supabase.
+Settings includes an **Account** section for using the same data on phone and computer with Supabase. After sign up or sign in, cloud sync runs automatically. Password reset emails can be requested from the setup screen or Settings.
 
 In Supabase, create this table in the SQL Editor:
 

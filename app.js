@@ -36,6 +36,13 @@ const currencyCodeAliases = {
 
 const currencyPresetCodes = ["USD", "EUR", "JPY", "GBP", "MXN", "ARS", "CLP", "COP"];
 
+const setupCurrencyChoices = {
+  CAD: { tabName: "Canada" },
+  BRL: { tabName: "Brasil" },
+  USD: { tabName: "United States" },
+  JPY: { tabName: "Japan" }
+};
+
 const defaultCurrencies = {
   CAD: knownCurrencies.CAD,
   BRL: knownCurrencies.BRL
@@ -105,6 +112,7 @@ const fallbackIncomeSourceColors = [
 ];
 
 const defaults = {
+  language: "en",
   mainCurrency: "CAD",
   ratesToCAD: { CAD: 1, USD: 1.36, BRL: 0.25 },
   ratesUpdatedAt: "",
@@ -148,8 +156,279 @@ const defaults = {
   recurringBills: []
 };
 
+const translations = {
+  pt: {
+    "Home": "Início",
+    "Transactions": "Transações",
+    "Reports": "Relatórios",
+    "Settings": "Configurações",
+    "Investments": "Investimentos",
+    "Mode": "Modo",
+    "Set up your money tabs": "Configure suas abas de dinheiro",
+    "Create your account, choose the currencies you use, and turn on sync for your phone and computer.": "Crie sua conta, escolha as moedas que você usa e ative a sincronização no celular e no computador.",
+    "Email": "E-mail",
+    "Password": "Senha",
+    "Create account": "Criar conta",
+    "I already have an account": "Já tenho uma conta",
+    "Forgot password?": "Esqueceu a senha?",
+    "Choose currency tabs": "Escolha as abas de moeda",
+    "Canada CAD": "Canadá CAD",
+    "Brasil BRL": "Brasil BRL",
+    "United States USD": "Estados Unidos USD",
+    "Japan JPY": "Japão JPY",
+    "Other tab name": "Nome de outra aba",
+    "Code, like EUR": "Código, como EUR",
+    "Use a PIN on this device": "Usar PIN neste dispositivo",
+    "4 to 6 digit PIN": "PIN de 4 a 6 dígitos",
+    "Continue without account": "Continuar sem conta",
+    "Enter your PIN": "Digite seu PIN",
+    "PIN": "PIN",
+    "Unlock": "Desbloquear",
+    "Account": "Conta",
+    "Money setup": "Configuração do dinheiro",
+    "Lists": "Listas",
+    "Recurring bills": "Contas recorrentes",
+    "Chart colors": "Cores dos gráficos",
+    "Backup": "Backup",
+    "Show": "Mostrar",
+    "Hide": "Ocultar",
+    "Account info": "Informações da conta",
+    "Sign in once and the app syncs automatically on your phone and computer.": "Entre uma vez e o app sincroniza automaticamente no celular e no computador.",
+    "Sign in": "Entrar",
+    "Sign out": "Sair",
+    "Cloud sync is not connected yet.": "A sincronização na nuvem ainda não está conectada.",
+    "PIN lock": "Bloqueio por PIN",
+    "Ask for a PIN when this app opens": "Pedir um PIN quando o app abrir",
+    "Save PIN setting": "Salvar configuração do PIN",
+    "PIN is optional and only protects this device.": "O PIN é opcional e protege apenas este dispositivo.",
+    "Main currency": "Moeda principal",
+    "Currency tabs": "Abas de moeda",
+    "Conversion rates": "Taxas de conversão",
+    "This is the currency used for big totals and investment totals.": "Esta é a moeda usada nos totais principais e nos totais de investimento.",
+    "Main currency for totals": "Moeda principal dos totais",
+    "Pick a currency below, or type your own 3-letter code.": "Escolha uma moeda abaixo ou digite seu próprio código de 3 letras.",
+    "US dollar": "Dólar americano",
+    "Euro": "Euro",
+    "Japan yen": "Iene japonês",
+    "British pound": "Libra britânica",
+    "Mexico peso": "Peso mexicano",
+    "Argentina peso": "Peso argentino",
+    "Chile peso": "Peso chileno",
+    "Colombia peso": "Peso colombiano",
+    "Tab name, like United States": "Nome da aba, como Estados Unidos",
+    "Code, like USD or JPY": "Código, como USD ou JPY",
+    "Currency name": "Nome da moeda",
+    "Symbol, like $": "Símbolo, como $",
+    "Exchange rate, optional": "Taxa de câmbio, opcional",
+    "Starting balance": "Saldo inicial",
+    "Add currency tab": "Adicionar aba de moeda",
+    "Exchange rates to CAD": "Taxas de câmbio para CAD",
+    "Update online rates": "Atualizar taxas online",
+    "Manual rates are being used.": "As taxas manuais estão sendo usadas.",
+    "Income sources": "Fontes de renda",
+    "New source": "Nova fonte",
+    "Expense categories": "Categorias de despesa",
+    "New category": "Nova categoria",
+    "Payment methods": "Formas de pagamento",
+    "New payment method": "Nova forma de pagamento",
+    "Add": "Adicionar",
+    "Add reminder": "Adicionar lembrete",
+    "Bill name": "Nome da conta",
+    "Amount": "Valor",
+    "Day 1-31": "Dia 1-31",
+    "Keep bills here for now. They show on Home under upcoming reminders.": "Deixe as contas aqui por enquanto. Elas aparecem no Início em próximos lembretes.",
+    "Change the colors used in your earning and spending bars.": "Altere as cores usadas nas barras de ganhos e gastos.",
+    "Export CSV": "Exportar CSV",
+    "Export full backup": "Exportar backup completo",
+    "Import full backup": "Importar backup completo",
+    "A full backup saves transactions, investments, reminders, categories, colors, and settings.": "Um backup completo salva transações, investimentos, lembretes, categorias, cores e configurações.",
+    "Language": "Idioma",
+    "Choose the language for the app.": "Escolha o idioma do app.",
+    "App language": "Idioma do app",
+    "English": "Inglês",
+    "Portuguese": "Português",
+    "+ Add Income": "+ Adicionar renda",
+    "- Add Expense": "- Adicionar despesa",
+    "+ Add Investment": "+ Adicionar investimento",
+    "Transfer Money": "Transferir dinheiro",
+    "Quick actions": "Ações rápidas",
+    "Investment money": "Dinheiro investido",
+    "Upcoming reminders": "Próximos lembretes",
+    "Income this month": "Renda deste mês",
+    "Expenses this month": "Despesas deste mês",
+    "Investments this month": "Investimentos deste mês",
+    "Money remaining this month": "Dinheiro restante neste mês",
+    "Earnings by source": "Ganhos por fonte",
+    "Spending by category": "Gastos por categoria",
+    "No earning chart yet": "Ainda não há gráfico de ganhos",
+    "No spending chart yet": "Ainda não há gráfico de gastos",
+    "No investment money recorded yet": "Nenhum dinheiro de investimento registrado ainda",
+    "No recurring reminders yet": "Nenhum lembrete recorrente ainda",
+    "Total put in investments": "Total colocado em investimentos",
+    "Total gain/loss": "Ganho/perda total",
+    "Minimize": "Minimizar",
+    "+ Income": "+ Renda",
+    "- Expense": "- Despesa",
+    "Total investments": "Total de investimentos",
+    "Totals by currency": "Totais por moeda",
+    "Choose investment tab": "Escolha a aba de investimento",
+    "No investments yet": "Nenhum investimento ainda",
+    "Add simple investment records here.": "Adicione registros simples de investimento aqui.",
+    "Search transactions": "Pesquisar transações",
+    "All": "Todos",
+    "Income": "Renda",
+    "Expense": "Despesa",
+    "Invest": "Investir",
+    "Transfer": "Transferência",
+    "All categories": "Todas as categorias",
+    "All currencies": "Todas as moedas",
+    "No records found": "Nenhum registro encontrado",
+    "Try changing the search or filters.": "Tente mudar a pesquisa ou os filtros.",
+    "This month vs last month": "Este mês vs mês passado",
+    "Months": "Meses",
+    "Years": "Anos",
+    "No months yet": "Ainda não há meses",
+    "No years yet": "Ainda não há anos",
+    "Made": "Ganhos",
+    "Spent": "Gastos",
+    "Invested": "Investido",
+    "Left": "Restante",
+    "Transfer in": "Transferência recebida",
+    "Transfer out": "Transferência enviada",
+    "Fees": "Taxas",
+    "No records": "Nenhum registro",
+    "Add Income": "Adicionar renda",
+    "Add income": "Adicionar renda",
+    "Edit Income": "Editar renda",
+    "Edit income": "Editar renda",
+    "Add Expense": "Adicionar despesa",
+    "Add expense": "Adicionar despesa",
+    "Edit Expense": "Editar despesa",
+    "Edit expense": "Editar despesa",
+    "Currency": "Moeda",
+    "Currency tab": "Aba de moeda",
+    "Date": "Data",
+    "Source": "Fonte",
+    "Income source": "Fonte de renda",
+    "Expense category": "Categoria de despesa",
+    "Payment method": "Forma de pagamento",
+    "Exchange rate used": "Taxa de câmbio usada",
+    "Optional note": "Observação opcional",
+    "Save": "Salvar",
+    "Save reminder": "Salvar lembrete",
+    "From": "De",
+    "Amount sent": "Valor enviado",
+    "Currency sent": "Moeda enviada",
+    "To": "Para",
+    "Amount received": "Valor recebido",
+    "Currency received": "Moeda recebida",
+    "Transfer fee": "Taxa de transferência",
+    "Fee currency": "Moeda da taxa",
+    "Add Investment": "Adicionar investimento",
+    "Edit Investment": "Editar investimento",
+    "Name": "Nome",
+    "Stock, fund, crypto, savings": "Ação, fundo, cripto, poupança",
+    "Current value": "Valor atual",
+    "Investment tab": "Aba de investimento",
+    "Take this money out of that currency tab": "Tirar esse dinheiro dessa aba de moeda",
+    "Edit": "Editar",
+    "Delete": "Excluir",
+    "Fee": "Taxa",
+    "No fee": "Sem taxa",
+    "Cash": "Dinheiro",
+    "Debit card": "Cartão de débito",
+    "Credit card": "Cartão de crédito",
+    "Bank transfer": "Transferência bancária",
+    "Job": "Trabalho",
+    "Side job": "Bico",
+    "Gift or present": "Presente",
+    "Investment return": "Retorno de investimento",
+    "Rent received": "Aluguel recebido",
+    "Refund": "Reembolso",
+    "Other": "Outro",
+    "Rent or housing": "Aluguel ou moradia",
+    "Groceries": "Mercado",
+    "Restaurants and takeout": "Restaurantes e delivery",
+    "Internet": "Internet",
+    "Phone": "Telefone",
+    "Car": "Carro",
+    "Gas": "Gasolina",
+    "Transportation": "Transporte",
+    "Water": "Água",
+    "Electricity": "Eletricidade",
+    "Insurance": "Seguro",
+    "Health": "Saúde",
+    "Entertainment": "Entretenimento",
+    "Shopping": "Compras",
+    "Subscriptions": "Assinaturas",
+    "Education": "Educação",
+    "Travel": "Viagem",
+    "Gifts": "Presentes",
+    "Taxes": "Impostos",
+    "Canadian dollar": "Dólar canadense",
+    "Brazilian real": "Real brasileiro",
+    "Japanese yen": "Iene japonês",
+    "British pound": "Libra britânica",
+    "Mexican peso": "Peso mexicano",
+    "Argentine peso": "Peso argentino",
+    "Chilean peso": "Peso chileno",
+    "Colombian peso": "Peso colombiano",
+    "Canada": "Canadá",
+    "Japan": "Japão",
+    "United States": "Estados Unidos",
+    "United Kingdom": "Reino Unido",
+    "Europe": "Europa",
+    "Mexico": "México",
+    "Argentina": "Argentina",
+    "Chile": "Chile",
+    "Colombia": "Colômbia",
+    "Close": "Fechar",
+    "New name": "Novo nome",
+    "Delete this transaction?": "Excluir esta transação?",
+    "Delete this investment?": "Excluir este investimento?",
+    "Delete this transfer?": "Excluir esta transferência?",
+    "Delete this recurring reminder?": "Excluir este lembrete recorrente?",
+    "Keep at least one currency tab turned on.": "Mantenha pelo menos uma aba de moeda ligada.",
+    "This tab has records. Hide it instead so your old data stays safe.": "Esta aba tem registros. Oculte-a para manter seus dados antigos seguros.",
+    "Keep at least one currency tab.": "Mantenha pelo menos uma aba de moeda.",
+    "Use 4 to 6 numbers for the PIN.": "Use 4 a 6 números para o PIN.",
+    "PIN is turned off.": "O PIN está desativado.",
+    "PIN is turned on for this device.": "O PIN está ativado neste dispositivo.",
+    "Enter your 4 to 6 digit PIN.": "Digite seu PIN de 4 a 6 dígitos.",
+    "That PIN is not correct.": "Esse PIN não está correto.",
+    "Choose at least one currency tab.": "Escolha pelo menos uma aba de moeda.",
+    "Using this device only. You can sign in later from Settings.": "Usando apenas este dispositivo. Você pode entrar depois em Configurações.",
+    "Cloud settings saved. Sign up or log in to sync.": "Configurações da nuvem salvas. Crie uma conta ou entre para sincronizar.",
+    "Account created. Auto sync is on.": "Conta criada. A sincronização automática está ativada.",
+    "Account created. Check your email, then sign in.": "Conta criada. Verifique seu e-mail e depois entre.",
+    "Signed in. Auto sync is on.": "Você entrou. A sincronização automática está ativada.",
+    "Password reset email sent. Check your inbox.": "E-mail de redefinição de senha enviado. Verifique sua caixa de entrada.",
+    "Logged out. Local data is still saved on this device.": "Você saiu. Os dados locais ainda estão salvos neste dispositivo.",
+    "Auto-saved to cloud.": "Salvo automaticamente na nuvem.",
+    "Auto-loaded cloud data.": "Dados da nuvem carregados automaticamente.",
+    "Loaded cloud data onto this device.": "Dados da nuvem carregados neste dispositivo.",
+    "Loaded new cloud data from your other device.": "Novos dados da nuvem carregados do outro dispositivo.",
+    "Full backup downloaded. Keep that file somewhere safe.": "Backup completo baixado. Guarde esse arquivo em um lugar seguro.",
+    "Backup imported on this device.": "Backup importado neste dispositivo.",
+    "That backup file could not be opened.": "Não foi possível abrir esse arquivo de backup.",
+    "Updating rates from the internet...": "Atualizando taxas pela internet...",
+    "CAD is already the base rate.": "CAD já é a taxa base.",
+    "Could not update online. Your saved/manual rates are still being used.": "Não foi possível atualizar online. Suas taxas salvas/manuais ainda estão sendo usadas.",
+    "For custom currencies, use the real 3-letter code and add the exchange rate if you know it.": "Para moedas personalizadas, use o código real de 3 letras e adicione a taxa de câmbio se souber.",
+    "Pick one of the currency buttons, or type a 3-letter code like USD, JPY, EUR, GBP, or CAD.": "Escolha um dos botões de moeda ou digite um código de 3 letras como USD, JPY, EUR, GBP ou CAD.",
+    "From somewhere else": "Veio de outro lugar",
+    "Blue deduction from tab": "Dedução azul da aba"
+  }
+};
+
+const translatedTextNodes = new WeakMap();
+let lastLocalizedLanguage = "en";
+
 let state = loadState();
 let syncConfig = loadSyncConfig();
+let setupComplete = localStorage.getItem("makeSpendSetupComplete") === "true" || hasSavedFinanceData();
+let pinState = loadPinState();
+let appUnlocked = !pinState.enabled;
 let cloudSaveTimer = null;
 let cloudState = {
   client: null,
@@ -160,11 +439,102 @@ let cloudState = {
   saving: false
 };
 let filters = { kind: "all", category: "all", currency: "all", search: "" };
+let openSettingsPanels = new Set(loadOpenSections("makeSpendSettingsOpen", ["account"]));
+let openMoneySettingsPanels = new Set(loadOpenSections("makeSpendMoneySettingsOpen", ["main"]));
 let selectedMonth = monthKey(today());
 let editingRecurringBillId = "";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+function currentLanguage() {
+  return state?.language === "pt" ? "pt" : "en";
+}
+
+function appLocale() {
+  return currentLanguage() === "pt" ? "pt-BR" : undefined;
+}
+
+function translateText(value, language = currentLanguage()) {
+  const text = String(value);
+  if (language === "en") return text;
+  const dictionary = translations[language] || {};
+  const trimmed = text.trim();
+  if (!trimmed) return text;
+  if (dictionary[trimmed]) return text.replace(trimmed, dictionary[trimmed]);
+
+  let translated = text;
+  Object.entries(dictionary)
+    .filter(([english]) => english.length > 3)
+    .sort((a, b) => b[0].length - a[0].length)
+    .forEach(([english, translatedPhrase]) => {
+      translated = translated.replaceAll(english, translatedPhrase);
+    });
+  return translated
+    .replaceAll("Rate:", "Taxa:")
+    .replaceAll("equals CAD", "equivale a CAD")
+    .replaceAll("reports", "relatórios")
+    .replaceAll("invested", "investido")
+    .replaceAll("gain/loss", "ganho/perda")
+    .replaceAll("sent", "enviado")
+    .replaceAll("received", "recebido")
+    .replaceAll("Current value:", "Valor atual:")
+    .replaceAll("Gain/loss:", "Ganho/perda:")
+    .replaceAll("this month", "este mês")
+    .replaceAll("from last month", "desde o mês passado")
+    .replaceAll("Last synced", "Última sincronização")
+    .replaceAll("Manual rates", "Taxas manuais")
+    .replaceAll("Online rates", "Taxas online");
+}
+
+function localizeAttribute(element, attribute) {
+  const originalAttribute = `data-original-${attribute.replace(/[^a-z0-9]+/gi, "-")}`;
+  if (!element.hasAttribute(originalAttribute)) element.setAttribute(originalAttribute, element.getAttribute(attribute) || "");
+  element.setAttribute(attribute, translateText(element.getAttribute(originalAttribute) || ""));
+}
+
+function localizePage() {
+  const language = currentLanguage();
+  const languageChanged = language !== lastLocalizedLanguage;
+  document.documentElement.lang = language === "pt" ? "pt-BR" : "en";
+
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const parent = node.parentElement;
+      if (!parent || ["SCRIPT", "STYLE", "TEXTAREA"].includes(parent.tagName)) return NodeFilter.FILTER_REJECT;
+      return node.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach((node) => {
+    let original = translatedTextNodes.get(node);
+    if (!original) {
+      original = node.nodeValue;
+      translatedTextNodes.set(node, original);
+    } else if (!languageChanged) {
+      const expected = translateText(original, lastLocalizedLanguage);
+      if (node.nodeValue !== expected) {
+        original = node.nodeValue;
+        translatedTextNodes.set(node, original);
+      }
+    }
+    node.nodeValue = translateText(original, language);
+  });
+
+  $$("[placeholder]").forEach((element) => localizeAttribute(element, "placeholder"));
+  $$("[aria-label]").forEach((element) => localizeAttribute(element, "aria-label"));
+  $$("[title]").forEach((element) => localizeAttribute(element, "title"));
+  lastLocalizedLanguage = language;
+}
+
+const nativeAlert = window.alert.bind(window);
+const nativeConfirm = window.confirm.bind(window);
+const nativePrompt = window.prompt.bind(window);
+window.alert = (message) => nativeAlert(translateText(message));
+window.confirm = (message) => nativeConfirm(translateText(message));
+window.prompt = (message, fallback = "") => nativePrompt(translateText(message), fallback);
 
 function loadState() {
   try {
@@ -188,6 +558,49 @@ function loadSyncConfig() {
 
 function saveSyncConfig() {
   localStorage.setItem("makeSpendSyncConfig", JSON.stringify(syncConfig));
+}
+
+function loadOpenSections(key, fallback) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(key) || "[]");
+    return Array.isArray(saved) ? saved : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveOpenSections(key, sections) {
+  localStorage.setItem(key, JSON.stringify([...sections]));
+}
+
+function hasSavedFinanceData() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("makeSpendData") || "{}");
+    return Boolean(
+      saved.transactions?.length ||
+      saved.investments?.length ||
+      saved.transfers?.length ||
+      saved.recurringBills?.length
+    );
+  } catch {
+    return false;
+  }
+}
+
+function loadPinState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("makeSpendPin") || "{}");
+    return {
+      enabled: saved.enabled === true,
+      hash: saved.hash || ""
+    };
+  } catch {
+    return { enabled: false, hash: "" };
+  }
+}
+
+function savePinState() {
+  localStorage.setItem("makeSpendPin", JSON.stringify(pinState));
 }
 
 function normalizeState(saved) {
@@ -217,6 +630,7 @@ function normalizeState(saved) {
   return {
     ...defaults,
     ...saved,
+    language: saved.language || localStorage.getItem("makeSpendLanguage") || defaults.language,
     currencySettings,
     accounts,
     ratesToCAD: normalizeRates(currencySettings, { ...defaults.ratesToCAD, ...(saved.ratesToCAD || {}) }),
@@ -410,6 +824,12 @@ function colorForIncomeSource(source) {
   return fallbackIncomeSourceColors[total % fallbackIncomeSourceColors.length];
 }
 
+function colorForRecord(record) {
+  if (record.kind === "income") return colorForIncomeSource(record.category);
+  if (record.kind === "expense") return colorForCategory(record.category);
+  return "var(--blue)";
+}
+
 function incomeBySource(transactions, currency) {
   const totals = {};
   transactions
@@ -494,7 +914,7 @@ function isCurrentMonth(value) {
 }
 
 function currentMonthTitle() {
-  return new Date().toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return new Date().toLocaleDateString(appLocale(), { month: "long", year: "numeric" });
 }
 
 function monthKey(value) {
@@ -506,7 +926,7 @@ function yearKey(value) {
 }
 
 function monthLabel(key) {
-  return new Date(`${key}-01T00:00:00`).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return new Date(`${key}-01T00:00:00`).toLocaleDateString(appLocale(), { month: "long", year: "numeric" });
 }
 
 function shiftMonth(key, amount) {
@@ -517,11 +937,15 @@ function shiftMonth(key, amount) {
 
 function render() {
   document.body.classList.toggle("dark", state.theme === "dark");
+  document.body.classList.toggle("app-locked", !appUnlocked);
   renderHome();
   renderInvestments();
   renderTransactions();
   renderReports();
   renderSettings();
+  renderSetupGate();
+  renderPinLock();
+  localizePage();
   saveState();
 }
 
@@ -765,7 +1189,7 @@ function renderInvestments() {
 function investmentTemplate(investment) {
   const gainLoss = investmentValueInCurrency(investment, investment.currency) - Number(investment.amount);
   return `
-    <article class="transaction">
+    <article class="transaction" style="--transaction-color: var(--blue)">
       <div>
         <strong>${escapeHtml(investment.name)}</strong>
         <p>${formatDate(investment.date)} - ${countryName(investmentCountry(investment))} - ${escapeHtml(investment.currency)}</p>
@@ -1072,8 +1496,9 @@ function reportSpendingTemplate(report) {
 function transactionTemplate(transaction) {
   const sign = transaction.kind === "income" ? "+" : "-";
   const colorClass = transaction.kind === "income" ? "green" : "red";
+  const tipColor = colorForRecord(transaction);
   return `
-    <article class="transaction">
+    <article class="transaction" style="--transaction-color: ${escapeAttr(tipColor)}">
       <div>
         <strong>${escapeHtml(transaction.category)}</strong>
         <p>${formatDate(transaction.date)} - ${countryName(recordCountry(transaction))} - ${escapeHtml(transaction.currency)}</p>
@@ -1094,7 +1519,7 @@ function transactionTemplate(transaction) {
 
 function transferTemplate(transfer) {
   return `
-    <article class="transaction transfer-row">
+    <article class="transaction transfer-row" style="--transaction-color: var(--gray-action)">
       <div>
         <strong>Transfer</strong>
         <p>${formatDate(transfer.date)} - ${countryName(transfer.fromAccount)} to ${countryName(transfer.toAccount)}</p>
@@ -1115,8 +1540,10 @@ function transferTemplate(transfer) {
 function renderSettings() {
   if (!activeCurrencyCodes().includes(state.mainCurrency)) state.mainCurrency = activeAccounts()[0]?.currency || "CAD";
   $("#mainCurrency").innerHTML = currencyOptionsTemplate(state.mainCurrency);
-  $("#supabaseUrl").value = syncConfig.supabaseUrl;
-  $("#supabaseKey").value = syncConfig.publishableKey;
+  if ($("#supabaseUrl")) $("#supabaseUrl").value = syncConfig.supabaseUrl;
+  if ($("#supabaseKey")) $("#supabaseKey").value = syncConfig.publishableKey;
+  if ($("#pinEnabled")) $("#pinEnabled").checked = pinState.enabled;
+  if ($("#languageSelect")) $("#languageSelect").value = currentLanguage();
   $("#rateStatus").textContent = state.ratesUpdatedAt
     ? `${state.ratesSource} rates updated ${new Date(state.ratesUpdatedAt).toLocaleString()}.`
     : "Manual rates are being used.";
@@ -1128,6 +1555,33 @@ function renderSettings() {
   renderCategoryColorList();
   renderEditableList("paymentMethodList", state.paymentMethods, "payment");
   renderCloudStatus();
+  renderSettingsTabs();
+}
+
+function renderSettingsTabs() {
+  $$("[data-settings-panel]").forEach((panel) => {
+    const isOpen = openSettingsPanels.has(panel.dataset.settingsPanel);
+    panel.classList.toggle("open", isOpen);
+    const button = panel.querySelector("[data-settings-tab]");
+    if (button) {
+      button.classList.toggle("active", isOpen);
+      button.setAttribute("aria-expanded", String(isOpen));
+      const label = button.querySelector("strong");
+      if (label) label.textContent = isOpen ? "Hide" : "Show";
+    }
+  });
+
+  $$("[data-money-settings-panel]").forEach((panel) => {
+    const isOpen = openMoneySettingsPanels.has(panel.dataset.moneySettingsPanel);
+    panel.classList.toggle("open", isOpen);
+    const button = panel.querySelector("[data-money-settings-tab]");
+    if (button) {
+      button.classList.toggle("active", isOpen);
+      button.setAttribute("aria-expanded", String(isOpen));
+      const label = button.querySelector("strong");
+      if (label) label.textContent = isOpen ? "Hide" : "Show";
+    }
+  });
 }
 
 function renderAccountList() {
@@ -1221,10 +1675,35 @@ function fillCurrencyFields(code, overwrite = false) {
   showCurrencyFormMessage(`${info.name} is ready. Add a starting balance if you want, then tap Add currency tab.`, "ok");
 }
 
+function upsertCurrencyAccount(code, tabName = "") {
+  const normalizedCode = normalizeCurrencyCode(code);
+  if (!/^[A-Z]{3}$/.test(normalizedCode)) return false;
+  const info = knownCurrencies[normalizedCode] || { name: normalizedCode, symbol: `${normalizedCode} ` };
+  const name = tabName.trim() || info.tabName || setupCurrencyChoices[normalizedCode]?.tabName || normalizedCode;
+  state.currencySettings[normalizedCode] = { name: info.name, symbol: info.symbol };
+  if (!Number(state.ratesToCAD[normalizedCode])) state.ratesToCAD[normalizedCode] = normalizedCode === "CAD" ? 1 : 1;
+
+  const accounts = allAccounts();
+  const existing = accounts.find((account) => account.currency === normalizedCode);
+  if (existing) {
+    existing.name = name;
+    existing.active = true;
+    state.accounts = accounts;
+    if (!state.accountSettings[existing.id]) state.accountSettings[existing.id] = { startingBalance: 0 };
+    return true;
+  }
+
+  let id = accountIdFromNameAndCode(name, normalizedCode);
+  while (allAccounts().some((account) => account.id === id)) id = `${id}-${Date.now()}`;
+  state.accounts.push({ id, name, currency: normalizedCode, active: true });
+  state.accountSettings[id] = { startingBalance: 0, homeCollapsed: false, reportsCollapsed: false };
+  return true;
+}
+
 function showCurrencyFormMessage(message, tone = "") {
   const status = $("#currencyAddStatus");
   if (!status) return;
-  status.textContent = message;
+  status.textContent = translateText(message);
   status.className = `status-text currency-add-status ${tone}`.trim();
 }
 
@@ -1776,12 +2255,12 @@ async function refreshRates() {
   const button = $("#refreshRates");
   const status = $("#rateStatus");
   button.disabled = true;
-  status.textContent = "Updating rates from the internet...";
+  status.textContent = translateText("Updating rates from the internet...");
 
   try {
     const quoteCodes = allCurrencyCodes().filter((code) => code !== "CAD");
     if (!quoteCodes.length) {
-      status.textContent = "CAD is already the base rate.";
+      status.textContent = translateText("CAD is already the base rate.");
       return;
     }
     const results = await Promise.allSettled(quoteCodes.map(async (code) => {
@@ -1802,7 +2281,7 @@ async function refreshRates() {
     state.ratesSource = "Online";
     render();
   } catch (error) {
-    status.textContent = "Could not update online. Your saved/manual rates are still being used.";
+    status.textContent = translateText("Could not update online. Your saved/manual rates are still being used.");
   } finally {
     button.disabled = false;
   }
@@ -1823,7 +2302,7 @@ function backupExport() {
   const stamp = new Date().toISOString().slice(0, 10);
   exportFile(`make-and-spend-backup-${stamp}.json`, JSON.stringify(state, null, 2), "application/json");
   const status = $("#backupStatus");
-  if (status) status.textContent = "Full backup downloaded. Keep that file somewhere safe.";
+  if (status) status.textContent = translateText("Full backup downloaded. Keep that file somewhere safe.");
 }
 
 function backupImport(file) {
@@ -1834,12 +2313,130 @@ function backupImport(file) {
       state = normalizeState(JSON.parse(reader.result));
       render();
       const status = $("#backupStatus");
-      if (status) status.textContent = "Backup imported on this device.";
+      if (status) status.textContent = translateText("Backup imported on this device.");
     } catch {
       alert("That backup file could not be opened.");
     }
   };
   reader.readAsText(file);
+}
+
+function renderSetupGate() {
+  const gate = $("#setupGate");
+  if (!gate) return;
+  gate.hidden = setupComplete;
+  document.body.classList.toggle("setup-open", !setupComplete);
+  if (!setupComplete) {
+    $("#setupEmail").value = $("#setupEmail").value || $("#syncEmail")?.value || "";
+    $("#setupPassword").value = $("#setupPassword").value || $("#syncPassword")?.value || "";
+  }
+}
+
+function renderPinLock() {
+  const lock = $("#pinLock");
+  if (!lock) return;
+  const shouldLock = setupComplete && pinState.enabled && !appUnlocked;
+  lock.hidden = !shouldLock;
+  document.body.classList.toggle("app-locked", shouldLock);
+}
+
+function setupSelectedAccounts() {
+  const selected = $$("[data-setup-currency]:checked").map((input) => input.dataset.setupCurrency);
+  const customCode = normalizeCurrencyCode($("#setupCustomCode")?.value || "");
+  const customName = $("#setupCustomName")?.value.trim() || "";
+  const choices = [...new Set([...selected, customCode].filter(Boolean))];
+  if (!choices.length) throw new Error("Choose at least one currency tab.");
+
+  state.accounts = [];
+  state.accountSettings = {};
+  state.currencySettings = {};
+  choices.forEach((code) => {
+    const tabName = code === customCode ? customName : setupCurrencyChoices[code]?.tabName || knownCurrencies[code]?.tabName || code;
+    if (!upsertCurrencyAccount(code, tabName)) throw new Error(`Use a real 3-letter currency code for ${code || "the custom tab"}.`);
+  });
+  state.mainCurrency = activeAccounts()[0]?.currency || "CAD";
+}
+
+async function hashPin(pin) {
+  const bytes = new TextEncoder().encode(`make-spend-pin:${pin}`);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function cleanPin(value) {
+  return String(value || "").replace(/\D/g, "").slice(0, 6);
+}
+
+async function updatePinSetting(enabled, pin, statusSelector = "#pinSettingsStatus") {
+  const status = $(statusSelector);
+  if (!enabled) {
+    pinState = { enabled: false, hash: "" };
+    savePinState();
+    appUnlocked = true;
+    if (status) status.textContent = translateText("PIN is turned off.");
+    render();
+    return true;
+  }
+
+  const cleaned = cleanPin(pin);
+  if (!/^\d{4,6}$/.test(cleaned)) {
+    if (status) status.textContent = translateText("Use 4 to 6 numbers for the PIN.");
+    return false;
+  }
+  pinState = { enabled: true, hash: await hashPin(cleaned) };
+  savePinState();
+  appUnlocked = true;
+  if (status) status.textContent = translateText("PIN is turned on for this device.");
+  render();
+  return true;
+}
+
+async function unlockWithPin() {
+  const pin = cleanPin($("#unlockPin").value);
+  const status = $("#pinStatus");
+  if (!/^\d{4,6}$/.test(pin)) {
+    status.textContent = translateText("Enter your 4 to 6 digit PIN.");
+    return;
+  }
+  if (await hashPin(pin) !== pinState.hash) {
+    status.textContent = translateText("That PIN is not correct.");
+    return;
+  }
+  appUnlocked = true;
+  $("#unlockPin").value = "";
+  status.textContent = "";
+  render();
+}
+
+function setSetupStatus(message) {
+  const status = $("#setupStatus");
+  if (status) status.textContent = translateText(message);
+}
+
+async function finishFirstSetup(mode) {
+  try {
+    setupSelectedAccounts();
+    const wantsPin = $("#setupPinEnabled").checked;
+    const pinSaved = await updatePinSetting(wantsPin, $("#setupPin").value, "#setupStatus");
+    if (wantsPin && !pinSaved) return;
+
+    $("#syncEmail").value = $("#setupEmail").value.trim();
+    $("#syncPassword").value = $("#setupPassword").value;
+
+    if (mode === "signup") {
+      await signUpCloud(true);
+    } else if (mode === "login") {
+      await loginCloud(true);
+    } else {
+      setupComplete = true;
+      localStorage.setItem("makeSpendSetupComplete", "true");
+      appUnlocked = true;
+      render();
+      setCloudStatus("Using this device only. You can sign in later from Settings.");
+    }
+  } catch (error) {
+    setSetupStatus(error.message);
+  }
 }
 
 function renderCloudStatus(message = "") {
@@ -1857,7 +2454,7 @@ function renderCloudStatus(message = "") {
   if (cloudState.user) {
     status.textContent = cloudState.enabled
       ? `Cloud sync connected as ${cloudState.user.email || "your account"}.${lastSync}`
-      : `Logged in as ${cloudState.user.email || "your account"}. Choose Save or Load to start syncing.${lastSync}`;
+      : `Logged in as ${cloudState.user.email || "your account"}. Auto sync will start after the first save.${lastSync}`;
     return;
   }
   status.textContent = "Cloud settings saved. Sign up or log in to sync.";
@@ -1865,11 +2462,12 @@ function renderCloudStatus(message = "") {
 
 function setCloudStatus(message) {
   renderCloudStatus(message);
+  localizePage();
 }
 
 function saveCloudSettingsFromInputs() {
-  syncConfig.supabaseUrl = $("#supabaseUrl").value.trim().replace(/\/$/, "");
-  syncConfig.publishableKey = $("#supabaseKey").value.trim();
+  if ($("#supabaseUrl")) syncConfig.supabaseUrl = $("#supabaseUrl").value.trim().replace(/\/$/, "");
+  if ($("#supabaseKey")) syncConfig.publishableKey = $("#supabaseKey").value.trim();
   cloudState.client = null;
   saveSyncConfig();
   setCloudStatus("Cloud settings saved. Now sign up or log in.");
@@ -1902,7 +2500,16 @@ async function refreshCloudSession() {
   return cloudState.user;
 }
 
-async function signUpCloud() {
+async function finishCloudLogin(successMessage = "Signed in. Auto sync is on.") {
+  cloudState.enabled = true;
+  localStorage.setItem("makeSpendCloudEnabled", "true");
+  startCloudPolling();
+  const loaded = await loadCloudData(true);
+  if (!loaded) await saveCloudData(true);
+  setCloudStatus(successMessage);
+}
+
+async function signUpCloud(fromSetup = false) {
   try {
     saveCloudSettingsFromInputs();
     const email = $("#syncEmail").value.trim();
@@ -1912,13 +2519,25 @@ async function signUpCloud() {
     const { data, error } = await client.auth.signUp({ email, password });
     if (error) throw error;
     cloudState.user = data.user || data.session?.user || null;
-    setCloudStatus(data.session ? "Account created and logged in. Tap Save this device to cloud." : "Account created. Check your email if Supabase asks you to confirm it, then log in.");
+    setupComplete = true;
+    localStorage.setItem("makeSpendSetupComplete", "true");
+    appUnlocked = true;
+    if (data.session) {
+      await finishCloudLogin("Account created. Auto sync is on.");
+    } else {
+      setCloudStatus("Account created. Check your email, then sign in.");
+      if (fromSetup) setSetupStatus("Account created. Check your email, then sign in.");
+    }
+    render();
+    return true;
   } catch (error) {
     setCloudStatus(error.message);
+    if (fromSetup) setSetupStatus(error.message);
+    return false;
   }
 }
 
-async function loginCloud() {
+async function loginCloud(fromSetup = false) {
   try {
     saveCloudSettingsFromInputs();
     const email = $("#syncEmail").value.trim();
@@ -1928,11 +2547,35 @@ async function loginCloud() {
     const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) throw error;
     cloudState.user = data.user;
-    cloudState.enabled = localStorage.getItem("makeSpendCloudEnabled") === "true";
-    startCloudPolling();
-    setCloudStatus(cloudState.enabled ? "Logged in. Auto sync is on." : "Logged in. Tap Load cloud data or Save this device to cloud.");
+    setupComplete = true;
+    localStorage.setItem("makeSpendSetupComplete", "true");
+    appUnlocked = true;
+    await finishCloudLogin("Signed in. Auto sync is on.");
+    render();
+    return true;
   } catch (error) {
     setCloudStatus(error.message);
+    if (fromSetup) setSetupStatus(error.message);
+    return false;
+  }
+}
+
+async function resetPasswordCloud(fromSetup = false) {
+  try {
+    saveCloudSettingsFromInputs();
+    const email = (fromSetup ? $("#setupEmail") : $("#syncEmail")).value.trim();
+    if (!email) throw new Error("Enter your email first.");
+    const client = getSupabaseClient();
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.href.split("#")[0]
+    });
+    if (error) throw error;
+    const message = "Password reset email sent. Check your inbox.";
+    setCloudStatus(message);
+    if (fromSetup) setSetupStatus(message);
+  } catch (error) {
+    setCloudStatus(error.message);
+    if (fromSetup) setSetupStatus(error.message);
   }
 }
 
@@ -1974,8 +2617,10 @@ async function saveCloudData(silent = false) {
     localStorage.setItem("makeSpendCloudUpdatedAt", updatedAt);
     setCloudStatus(silent ? "Auto-saved to cloud." : "Saved this device data to cloud.");
     startCloudPolling();
+    return true;
   } catch (error) {
     if (!silent) setCloudStatus(error.message);
+    return false;
   } finally {
     cloudState.saving = false;
   }
@@ -1994,7 +2639,7 @@ async function loadCloudData(silent = false) {
     if (error) throw error;
     if (!data?.data) {
       if (!silent) setCloudStatus("No cloud data yet. Tap Save this device to cloud first.");
-      return;
+      return false;
     }
     cloudState.loading = true;
     state = normalizeState(data.data);
@@ -2005,8 +2650,10 @@ async function loadCloudData(silent = false) {
     render();
     setCloudStatus(silent ? "Auto-loaded cloud data." : "Loaded cloud data onto this device.");
     startCloudPolling();
+    return true;
   } catch (error) {
     if (!silent) setCloudStatus(error.message);
+    return false;
   } finally {
     cloudState.loading = false;
   }
@@ -2060,7 +2707,7 @@ async function initCloud() {
 }
 
 function formatDate(value) {
-  return new Date(value + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return new Date(value + "T00:00:00").toLocaleDateString(appLocale(), { month: "short", day: "numeric", year: "numeric" });
 }
 
 function escapeHtml(value) {
@@ -2084,6 +2731,26 @@ document.addEventListener("click", (event) => {
   if (target.dataset.tab) {
     $$(".screen").forEach((screen) => screen.classList.toggle("active", screen.id === target.dataset.tab));
     $$(".tabs button").forEach((button) => button.classList.toggle("active", button === target));
+  }
+
+  if (target.dataset.settingsTab) {
+    if (openSettingsPanels.has(target.dataset.settingsTab)) {
+      openSettingsPanels.delete(target.dataset.settingsTab);
+    } else {
+      openSettingsPanels.add(target.dataset.settingsTab);
+    }
+    saveOpenSections("makeSpendSettingsOpen", openSettingsPanels);
+    renderSettingsTabs();
+  }
+
+  if (target.dataset.moneySettingsTab) {
+    if (openMoneySettingsPanels.has(target.dataset.moneySettingsTab)) {
+      openMoneySettingsPanels.delete(target.dataset.moneySettingsTab);
+    } else {
+      openMoneySettingsPanels.add(target.dataset.moneySettingsTab);
+    }
+    saveOpenSections("makeSpendMoneySettingsOpen", openMoneySettingsPanels);
+    renderSettingsTabs();
   }
 
   if (target.dataset.openForm) openForm(target.dataset.openForm, null, target.dataset.currency || null, target.dataset.country || null);
@@ -2248,6 +2915,11 @@ $("#mainCurrency").addEventListener("change", (event) => {
   state.mainCurrency = event.target.value;
   render();
 });
+$("#languageSelect").addEventListener("change", (event) => {
+  state.language = event.target.value;
+  localStorage.setItem("makeSpendLanguage", state.language);
+  render();
+});
 $("#themeButton").addEventListener("click", () => {
   state.theme = state.theme === "dark" ? "light" : "dark";
   render();
@@ -2256,12 +2928,34 @@ $("#exportCsv").addEventListener("click", csvExport);
 $("#exportBackup").addEventListener("click", backupExport);
 $("#refreshRates").addEventListener("click", refreshRates);
 $("#addRecurringBill").addEventListener("click", saveRecurringBill);
-$("#saveCloudSettings").addEventListener("click", saveCloudSettingsFromInputs);
-$("#signUpCloud").addEventListener("click", signUpCloud);
-$("#loginCloud").addEventListener("click", loginCloud);
+$("#saveCloudSettings")?.addEventListener("click", saveCloudSettingsFromInputs);
+$("#signUpCloud").addEventListener("click", () => signUpCloud(false));
+$("#loginCloud").addEventListener("click", () => loginCloud(false));
 $("#logoutCloud").addEventListener("click", logoutCloud);
-$("#saveCloudData").addEventListener("click", () => saveCloudData(false));
-$("#loadCloudData").addEventListener("click", () => loadCloudData(false));
+$("#resetPasswordCloud").addEventListener("click", () => resetPasswordCloud(false));
+$("#saveCloudData")?.addEventListener("click", () => saveCloudData(false));
+$("#loadCloudData")?.addEventListener("click", () => loadCloudData(false));
+$("#setupSignUp").addEventListener("click", () => finishFirstSetup("signup"));
+$("#setupSignIn").addEventListener("click", () => finishFirstSetup("login"));
+$("#setupPasswordReset").addEventListener("click", () => resetPasswordCloud(true));
+$("#setupLocalOnly").addEventListener("click", () => finishFirstSetup("local"));
+$("#setupCustomCode").addEventListener("input", (event) => {
+  event.target.value = event.target.value.toUpperCase();
+});
+$("#setupPin").addEventListener("input", (event) => {
+  event.target.value = cleanPin(event.target.value);
+});
+$("#pinInput").addEventListener("input", (event) => {
+  event.target.value = cleanPin(event.target.value);
+});
+$("#unlockPin").addEventListener("input", (event) => {
+  event.target.value = cleanPin(event.target.value);
+});
+$("#savePinSettings").addEventListener("click", () => updatePinSetting($("#pinEnabled").checked, $("#pinInput").value));
+$("#unlockPinButton").addEventListener("click", unlockWithPin);
+$("#unlockPin").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") unlockWithPin();
+});
 $("#importBackup").addEventListener("change", (event) => {
   if (event.target.files[0]) backupImport(event.target.files[0]);
 });
