@@ -219,6 +219,8 @@ const translations = {
     "No joint tabs yet": "Ainda não há abas conjuntas",
     "Invite code": "Código de convite",
     "Copy code": "Copiar código",
+    "Leave": "Sair",
+    "Delete for everyone": "Excluir para todos",
     "Your invite code": "Seu código de convite",
     "Send this code to the other person.": "Envie este código para a outra pessoa.",
     "This is the currency used for big totals and investment totals.": "Esta é a moeda usada nos totais principais e nos totais de investimento.",
@@ -432,6 +434,12 @@ const translations = {
     "Paste the invite code first.": "Cole o código de convite primeiro.",
     "Joining joint tab...": "Entrando na aba conjunta...",
     "Syncing joint tabs...": "Sincronizando abas conjuntas...",
+    "Leaving joint tab...": "Saindo da aba conjunta...",
+    "Joint tab removed from your account.": "Aba conjunta removida da sua conta.",
+    "Deleting joint tab...": "Excluindo aba conjunta...",
+    "Joint tab deleted for everyone.": "Aba conjunta excluída para todos.",
+    "Leave this joint tab?": "Sair desta aba conjunta?",
+    "Delete this joint tab for everyone?": "Excluir esta aba conjunta para todos?",
     "Invite code not found.": "Código de convite não encontrado.",
     "Joint tab joined.": "Você entrou na aba conjunta.",
     "Invite code copied.": "Código de convite copiado.",
@@ -1671,7 +1679,11 @@ function renderJointTabs() {
         <strong>${escapeHtml(account.name)}</strong>
         <p>${escapeHtml(account.currency)} · Invite code ${escapeHtml(account.inviteCode || "")}</p>
       </div>
-      <button data-copy-invite="${escapeAttr(account.inviteCode || "")}">Copy code</button>
+      <div class="joint-row-actions">
+        <button data-copy-invite="${escapeAttr(account.inviteCode || "")}">Copy code</button>
+        <button class="soft-danger" data-leave-joint-tab="${escapeAttr(account.id)}">Leave</button>
+        ${account.createdBy && cloudState.user?.id === account.createdBy ? `<button class="danger" data-delete-joint-tab="${escapeAttr(account.id)}">Delete for everyone</button>` : ""}
+      </div>
     </div>
   `).join("") : `<p class="eyebrow">No joint tabs yet</p>`}`;
   updateJointTabControls();
@@ -1701,6 +1713,9 @@ function updateJointTabControls() {
     const field = $(selector);
     if (field) field.disabled = Boolean(jointTabUi.loading);
   });
+  $$("[data-copy-invite], [data-leave-joint-tab], [data-delete-joint-tab]").forEach((button) => {
+    button.disabled = Boolean(jointTabUi.loading);
+  });
 }
 
 function setJointTabLoading(action, message = "") {
@@ -1717,6 +1732,8 @@ function jointTabErrorMessage(error) {
     message.includes("shared_tab_records") ||
     message.includes("my_shared_tabs") ||
     message.includes("join_shared_tab") ||
+    message.includes("leave_shared_tab") ||
+    message.includes("delete_shared_tab") ||
     message.includes("schema cache")
   ) {
     return "Joint tabs are not set up in Supabase yet. Run the Joint tabs SQL from the README, then refresh this app.";
@@ -2747,7 +2764,8 @@ function ensureSharedAccount(tab) {
     currency,
     active: true,
     sharedTabId: tab.id,
-    inviteCode: tab.invite_code || tab.inviteCode || ""
+    inviteCode: tab.invite_code || tab.inviteCode || "",
+    createdBy: tab.created_by || tab.createdBy || ""
   };
   const existing = accounts.find((account) => account.id === id);
   state.accounts = existing
@@ -2820,6 +2838,60 @@ async function joinJointTab() {
     await syncSharedTabs(false);
     setJointTabLoading("");
     setJointTabStatus("Joint tab joined.");
+    render();
+  } catch (error) {
+    setJointTabLoading("");
+    setJointTabStatus(jointTabErrorMessage(error));
+  }
+}
+
+function removeSharedAccountFromLocal(accountId) {
+  const account = allAccounts().find((item) => item.id === accountId);
+  if (!account?.sharedTabId) return;
+  state.accounts = allAccounts().filter((item) => item.id !== accountId);
+  state.transactions = state.transactions.filter((transaction) => recordCountry(transaction) !== accountId);
+  delete state.accountSettings[accountId];
+  state.sharedTabs = (state.sharedTabs || []).filter((tab) => tab.id !== account.sharedTabId);
+  if (jointTabUi.latestInviteCode && jointTabUi.latestInviteCode === account.inviteCode) jointTabUi.latestInviteCode = "";
+}
+
+async function leaveJointTab(accountId) {
+  if (jointTabUi.loading) return;
+  const account = allAccounts().find((item) => item.id === accountId);
+  if (!account?.sharedTabId) return;
+  if (!confirm(translateText("Leave this joint tab?"))) return;
+  try {
+    setJointTabLoading("leave", "Leaving joint tab...");
+    const user = cloudState.user || await refreshCloudSession();
+    if (!user) throw new Error("Sign in before joining a joint tab.");
+    const client = getSupabaseClient();
+    const { error } = await client.rpc("leave_shared_tab", { tab_id_input: account.sharedTabId });
+    if (error) throw error;
+    removeSharedAccountFromLocal(accountId);
+    setJointTabLoading("");
+    setJointTabStatus("Joint tab removed from your account.");
+    render();
+  } catch (error) {
+    setJointTabLoading("");
+    setJointTabStatus(jointTabErrorMessage(error));
+  }
+}
+
+async function deleteJointTab(accountId) {
+  if (jointTabUi.loading) return;
+  const account = allAccounts().find((item) => item.id === accountId);
+  if (!account?.sharedTabId) return;
+  if (!confirm(translateText("Delete this joint tab for everyone?"))) return;
+  try {
+    setJointTabLoading("delete", "Deleting joint tab...");
+    const user = cloudState.user || await refreshCloudSession();
+    if (!user) throw new Error("Sign in before joining a joint tab.");
+    const client = getSupabaseClient();
+    const { error } = await client.rpc("delete_shared_tab", { tab_id_input: account.sharedTabId });
+    if (error) throw error;
+    removeSharedAccountFromLocal(accountId);
+    setJointTabLoading("");
+    setJointTabStatus("Joint tab deleted for everyone.");
     render();
   } catch (error) {
     setJointTabLoading("");
@@ -3124,6 +3196,8 @@ document.addEventListener("click", async (event) => {
   if (target.dataset.currencyPreset) fillCurrencyFields(target.dataset.currencyPreset, true);
   if (target.id === "createJointTab") createJointTab();
   if (target.id === "joinJointTab") joinJointTab();
+  if (target.dataset.leaveJointTab) leaveJointTab(target.dataset.leaveJointTab);
+  if (target.dataset.deleteJointTab) deleteJointTab(target.dataset.deleteJointTab);
   if (target.dataset.copyInvite) {
     await navigator.clipboard?.writeText(target.dataset.copyInvite);
     setJointTabStatus("Invite code copied.");

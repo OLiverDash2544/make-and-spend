@@ -69,7 +69,7 @@ Settings includes an **Update online rates** button. It uses the public Frankfur
 
 Investments can be assigned to a currency tab. By default, investment money is deducted from that tab in blue, but it is not counted as a red expense. Uncheck **Take this money out of that currency tab** when the investment money came from somewhere else.
 
-Settings also includes **Joint tabs**. A signed-in user can create a shared currency tab, copy the invite code, and send that code to another signed-in user. The other user pastes the invite code to join. Records added to a joint tab are saved separately from private transactions, and each joint transaction shows who added it.
+Settings also includes **Joint tabs**. A signed-in user can create a shared currency tab, copy the invite code, and send that code to another signed-in user. The other user pastes the invite code to join. Records added to a joint tab are saved separately from private transactions, and each joint transaction shows who added it. A member can leave a joint tab, and the creator can delete the joint tab for everyone.
 
 ## Cloud Sync
 
@@ -289,6 +289,39 @@ begin
   join public.shared_tab_members m on m.tab_id = t.id
   where m.user_id = auth.uid()
     and upper(t.invite_code) = upper(invite_code_input);
+end;
+$$;
+
+create or replace function public.leave_shared_tab(tab_id_input uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from public.shared_tab_members
+  where tab_id = tab_id_input
+    and user_id = auth.uid();
+
+  delete from public.shared_tabs t
+  where t.id = tab_id_input
+    and not exists (
+      select 1 from public.shared_tab_members m
+      where m.tab_id = t.id
+    );
+end;
+$$;
+
+create or replace function public.delete_shared_tab(tab_id_input uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from public.shared_tabs t
+  where t.id = tab_id_input
+    and t.created_by = auth.uid();
 end;
 $$;
 ```

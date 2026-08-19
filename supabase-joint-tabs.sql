@@ -190,3 +190,36 @@ begin
     and upper(t.invite_code) = upper(invite_code_input);
 end;
 $$;
+
+create or replace function public.leave_shared_tab(tab_id_input uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from public.shared_tab_members
+  where tab_id = tab_id_input
+    and user_id = auth.uid();
+
+  delete from public.shared_tabs t
+  where t.id = tab_id_input
+    and not exists (
+      select 1 from public.shared_tab_members m
+      where m.tab_id = t.id
+    );
+end;
+$$;
+
+create or replace function public.delete_shared_tab(tab_id_input uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from public.shared_tabs t
+  where t.id = tab_id_input
+    and t.created_by = auth.uid();
+end;
+$$;
