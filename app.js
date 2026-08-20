@@ -1359,12 +1359,13 @@ function reportComparisonTemplate(months, currency) {
   const blankLastMonth = emptyReport(lastKey, "month", currency);
   const thisMonth = months.find((report) => report.key === thisKey) || blankThisMonth;
   const lastMonth = months.find((report) => report.key === lastKey) || blankLastMonth;
+  const balanceChange = thisMonth.remaining - lastMonth.remaining;
 
   return `
     <article class="report-card comparison-card">
       <div class="report-year-head">
         <span>This month vs last month</span>
-        <strong>${money(thisMonth.remaining - lastMonth.remaining, currency)}</strong>
+        <strong class="${balanceChange >= 0 ? "green" : "red"}">${money(balanceChange, currency)}</strong>
       </div>
       <div class="report-metrics">
         ${comparisonMetricTemplate("Made", thisMonth.income, lastMonth.income, currency, "green")}
@@ -1378,14 +1379,19 @@ function reportComparisonTemplate(months, currency) {
 
 function comparisonMetricTemplate(label, current, previous, currency, colorClass, lowerIsBetter = false) {
   const change = current - previous;
-  const changeIsGood = lowerIsBetter ? change <= 0 : change >= 0;
+  const changeClass = comparisonChangeClass(change, lowerIsBetter);
   return `
     <div>
       <span>${label}</span>
       <strong class="${colorClass}">${money(current, currency)}</strong>
-      <small class="${changeIsGood ? "green" : "red"}">${change >= 0 ? "+" : ""}${money(change, currency)} from last month</small>
+      <small class="${changeClass}">${change >= 0 ? "+" : ""}${money(change, currency)} from last month</small>
     </div>
   `;
+}
+
+function comparisonChangeClass(change, lowerIsBetter = false) {
+  if (lowerIsBetter) return change <= 0 ? "green" : "red";
+  return change >= 0 ? "green" : "red";
 }
 
 function buildPeriodReports(type, countryId) {
