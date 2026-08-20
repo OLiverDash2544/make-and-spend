@@ -85,7 +85,7 @@
 
         <section class="balance-card">
           <div class="row">
-            <span>Total investments</span>
+            <span>Net invested</span>
             <strong id="investmentCurrency">CAD</strong>
           </div>
           <div class="balance" id="investmentTotal">$0.00 CAD</div>
@@ -500,14 +500,17 @@
 
         <input type="hidden" id="investmentEditingId">
 
-        <label>Name</label>
-        <input id="investmentName" placeholder="Stock, fund, crypto, savings" required>
+        <label>Where did you invest?</label>
+        <input id="investmentName" placeholder="Bank, app, stock, fund, crypto" required>
+
+        <label>Investment action</label>
+        <select id="investmentAction">
+          <option value="in">Money invested</option>
+          <option value="out">Money taken out</option>
+        </select>
 
         <label>Amount</label>
         <input id="investmentAmount" type="text" inputmode="decimal" autocomplete="off" required>
-
-        <label>Current value</label>
-        <input id="investmentCurrentValue" type="text" inputmode="decimal" autocomplete="off">
 
         <label>Currency</label>
         <select id="investmentCurrencyInput"></select>
@@ -517,7 +520,7 @@
 
         <label class="check-row">
           <input id="investmentDeductInput" type="checkbox" checked>
-          <span>Take this money out of that currency tab</span>
+          <span>Move this money in or out of that currency tab</span>
         </label>
 
         <label>Date</label>

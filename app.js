@@ -285,6 +285,7 @@ const translations = {
     "No recurring reminders yet": "Nenhum lembrete recorrente ainda",
     "Total put in investments": "Total colocado em investimentos",
     "Total gain/loss": "Ganho/perda total",
+    "Net invested": "Investido líquido",
     "Minimize": "Minimizar",
     "+ Income": "+ Renda",
     "- Expense": "- Despesa",
@@ -347,6 +348,14 @@ const translations = {
     "Edit Investment": "Editar investimento",
     "Name": "Nome",
     "Stock, fund, crypto, savings": "Ação, fundo, cripto, poupança",
+    "Where did you invest?": "Onde você investiu?",
+    "Bank, app, stock, fund, crypto": "Banco, app, ação, fundo, cripto",
+    "Investment action": "Ação do investimento",
+    "Money invested": "Dinheiro investido",
+    "Money taken out": "Dinheiro retirado",
+    "Put in": "Colocado",
+    "Took out": "Retirado",
+    "Move this money in or out of that currency tab": "Mover esse dinheiro para dentro ou para fora dessa aba de moeda",
     "Current value": "Valor atual",
     "Investment tab": "Aba de investimento",
     "Take this money out of that currency tab": "Tirar esse dinheiro dessa aba de moeda",
@@ -459,7 +468,8 @@ const translations = {
     "For custom currencies, use the real 3-letter code and add the exchange rate if you know it.": "Para moedas personalizadas, use o código real de 3 letras e adicione a taxa de câmbio se souber.",
     "Pick one of the currency buttons, or type a 3-letter code like USD, JPY, EUR, GBP, or CAD.": "Escolha um dos botões de moeda ou digite um código de 3 letras como USD, JPY, EUR, GBP ou CAD.",
     "From somewhere else": "Veio de outro lugar",
-    "Blue deduction from tab": "Dedução azul da aba"
+    "Blue deduction from tab": "Dedução azul da aba",
+    "Added back to tab": "Adicionado de volta à aba"
   }
 };
 
@@ -825,15 +835,24 @@ function recordCountry(record) {
   return countryIdForCurrency(record.currency);
 }
 
-function investmentInCurrency(investment, targetCurrency) {
-  if (investment.currency === targetCurrency) return Number(investment.amount);
-  const cad = Number(investment.amount) * Number(state.ratesToCAD[investment.currency]);
-  return cad / Number(state.ratesToCAD[targetCurrency]);
+function investmentDirection(investment) {
+  return investment.action === "out" || investment.type === "withdrawal" ? -1 : 1;
 }
 
-function investmentValueInCurrency(investment, targetCurrency) {
-  const value = Number(investment.currentValue || investment.amount);
-  return convertedAmount(value, investment.currency, targetCurrency);
+function investmentActionLabel(investment) {
+  return investmentDirection(investment) < 0 ? "Took out" : "Put in";
+}
+
+function investmentMoveLabel(investment) {
+  if (investment.deductFromCountry === false) return "From somewhere else";
+  return investmentDirection(investment) < 0 ? "Added back to tab" : "Blue deduction from tab";
+}
+
+function investmentInCurrency(investment, targetCurrency) {
+  const amount = Number(investment.amount) * investmentDirection(investment);
+  if (investment.currency === targetCurrency) return amount;
+  const cad = amount * Number(state.ratesToCAD[investment.currency]);
+  return cad / Number(state.ratesToCAD[targetCurrency]);
 }
 
 function investmentCountry(investment) {
@@ -1020,8 +1039,6 @@ function renderHome() {
 
 function homeInvestmentSummary() {
   const total = state.investments.reduce((sum, investment) => sum + investmentInCurrency(investment, state.mainCurrency), 0);
-  const currentValueTotal = state.investments.reduce((sum, investment) => sum + investmentValueInCurrency(investment, state.mainCurrency), 0);
-  const gainLoss = currentValueTotal - total;
   if (!state.investments.length) {
     return `<p class="eyebrow">No investment money recorded yet</p>`;
   }
@@ -1029,32 +1046,17 @@ function homeInvestmentSummary() {
     const countryTotal = state.investments
       .filter((investment) => investmentCountry(investment) === country.id)
       .reduce((sum, investment) => sum + investmentInCurrency(investment, country.currency), 0);
-    const countryCurrent = state.investments
-      .filter((investment) => investmentCountry(investment) === country.id)
-      .reduce((sum, investment) => sum + investmentValueInCurrency(investment, country.currency), 0);
     return `
       <div class="metric">
-        <span>${country.name} invested</span>
+        <span>${country.name} net invested</span>
         <strong class="blue">${money(countryTotal, country.currency)}</strong>
-      </div>
-      <div class="metric">
-        <span>${country.name} gain/loss</span>
-        <strong class="${countryCurrent - countryTotal >= 0 ? "green" : "red"}">${money(countryCurrent - countryTotal, country.currency)}</strong>
       </div>
     `;
   }).join("");
   return `
     <div class="metric">
-      <span>Total put in investments</span>
+      <span>Net invested</span>
       <strong class="blue">${money(total, state.mainCurrency)}</strong>
-    </div>
-    <div class="metric">
-      <span>Current value</span>
-      <strong class="blue">${money(currentValueTotal, state.mainCurrency)}</strong>
-    </div>
-    <div class="metric">
-      <span>Total gain/loss</span>
-      <strong class="${gainLoss >= 0 ? "green" : "red"}">${money(gainLoss, state.mainCurrency)}</strong>
     </div>
     ${countryTotals}
     <div class="mini-list">
@@ -1186,11 +1188,10 @@ function accountSummary(countryId, selectedMonthKey) {
 
 function renderInvestments() {
   const total = state.investments.reduce((sum, investment) => sum + investmentInCurrency(investment, state.mainCurrency), 0);
-  const currentValueTotal = state.investments.reduce((sum, investment) => sum + investmentValueInCurrency(investment, state.mainCurrency), 0);
   const totalsByCurrency = allCurrencyCodes().reduce((totals, currency) => {
     totals[currency] = state.investments
       .filter((investment) => investment.currency === currency)
-      .reduce((sum, investment) => sum + Number(investment.amount), 0);
+      .reduce((sum, investment) => sum + investmentInCurrency(investment, currency), 0);
     return totals;
   }, {});
 
@@ -1211,16 +1212,7 @@ function renderInvestments() {
       <span>${currency}</span>
       <strong>${money(totalsByCurrency[currency], currency)}</strong>
     </div>
-  `).join("") + `
-    <div class="currency-total">
-      <span>Current value</span>
-      <strong>${money(currentValueTotal, state.mainCurrency)}</strong>
-    </div>
-    <div class="currency-total">
-      <span>Gain / loss</span>
-      <strong class="${currentValueTotal - total >= 0 ? "green" : "red"}">${money(currentValueTotal - total, state.mainCurrency)}</strong>
-    </div>
-  `;
+  `).join("");
   $("#investmentList").innerHTML = state.investments.length
     ? state.investments
       .slice()
@@ -1231,19 +1223,22 @@ function renderInvestments() {
 }
 
 function investmentTemplate(investment) {
-  const gainLoss = investmentValueInCurrency(investment, investment.currency) - Number(investment.amount);
+  const direction = investmentDirection(investment);
+  const colorClass = direction < 0 ? "green" : "blue";
+  const label = investmentActionLabel(investment);
+  const converted = investmentInCurrency(investment, state.mainCurrency);
   return `
     <article class="transaction" style="--transaction-color: var(--blue)">
       <div>
         <strong>${escapeHtml(investment.name)}</strong>
         <p>${formatDate(investment.date)} - ${countryName(investmentCountry(investment))} - ${escapeHtml(investment.currency)}</p>
-        <p>${investment.deductFromCountry === false ? "From somewhere else" : "Blue deduction from tab"}</p>
-        <p>Current value: ${money(investment.currentValue || investment.amount, investment.currency)} · Gain/loss: ${money(gainLoss, investment.currency)}</p>
+        <p>${label}</p>
+        <p>${investmentMoveLabel(investment)}</p>
         ${investment.note ? `<p>${escapeHtml(investment.note)}</p>` : ""}
       </div>
-      <div class="amount blue">
-        ${money(investment.amount, investment.currency)}
-        <p>${money(investmentInCurrency(investment, state.mainCurrency), state.mainCurrency)}</p>
+      <div class="amount ${colorClass}">
+        ${direction < 0 ? "-" : ""}${money(investment.amount, investment.currency)}
+        <p>${money(converted, state.mainCurrency)}</p>
       </div>
       <div class="transaction-actions">
         <button data-edit-investment="${investment.id}">Edit</button>
@@ -2190,8 +2185,8 @@ function openInvestmentForm(investment = null, countryOverride = null) {
   $("#investmentFormTitle").textContent = investment ? "Edit Investment" : "Add Investment";
   $("#investmentEditingId").value = investment?.id || "";
   $("#investmentName").value = investment?.name || "";
+  $("#investmentAction").value = investment?.action || "in";
   $("#investmentAmount").value = investment?.amount || "";
-  $("#investmentCurrentValue").value = investment?.currentValue || investment?.amount || "";
   const defaultCurrency = activeCurrencyCodes().includes(state.mainCurrency) ? state.mainCurrency : activeAccounts()[0]?.currency || state.mainCurrency;
   const selectedCurrency = investment?.currency || selectedCountry?.currency || defaultCurrency;
   const selectedAccount = investment ? investmentCountry(investment) : selectedCountry?.id || countryIdForCurrency(selectedCurrency);
@@ -2209,12 +2204,11 @@ function saveInvestment(event) {
   event.preventDefault();
   const id = $("#investmentEditingId").value || crypto.randomUUID();
   const amount = decimalValue($("#investmentAmount").value);
-  const currentValue = decimalValue($("#investmentCurrentValue").value) || amount;
   const investment = {
     id,
     name: $("#investmentName").value.trim(),
+    action: $("#investmentAction").value,
     amount,
-    currentValue,
     currency: $("#investmentCurrencyInput").value,
     country: $("#investmentCountryInput").value,
     deductFromCountry: $("#investmentDeductInput").checked,
@@ -2390,7 +2384,7 @@ function csvExport() {
       investment.currency,
       investment.date,
       countryName(investmentCountry(investment)),
-      `${countryName(investmentCountry(investment))}: ${investment.name}`,
+      `${investmentActionLabel(investment)}: ${investment.name}`,
       "",
       investment.note,
       state.ratesToCAD[investment.currency]

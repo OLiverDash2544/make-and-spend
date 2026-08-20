@@ -61,13 +61,13 @@ Default category colors:
 
 It also includes transfers between currency tabs. Transfers move money between accounts without counting as new income or regular expenses. Transfer fees are tracked separately.
 
-Home includes a simple **Add Investment** button. Investments track contributions, current value, country totals, and gains or losses without connecting to banks or moving real money.
+Home includes a simple **Add Investment** button. Investments only track how much money was put into investments, where it was invested, and how much was taken out. The app does not try to track profit, current value, or gains/losses.
 
 Settings includes **Recurring reminders** for bills that happen every month. Reminders do not automatically spend money. When you pay one, tap **Add expense** to record it.
 
 Settings includes an **Update online rates** button. It uses the public Frankfurter exchange-rate API when internet is available, then saves the latest rates locally. If the internet is unavailable, your saved/manual rates stay in place.
 
-Investments can be assigned to a currency tab. By default, investment money is deducted from that tab in blue, but it is not counted as a red expense. Uncheck **Take this money out of that currency tab** when the investment money came from somewhere else.
+Investments can be assigned to a currency tab. Money invested is deducted from that tab in blue, but it is not counted as a red expense. Money taken out is added back to that tab. Uncheck the movement checkbox when the money came from somewhere else or should not affect that currency tab.
 
 Settings also includes **Joint tabs**. A signed-in user can create a shared currency tab, copy the invite code, and send that code to another signed-in user. The other user pastes the invite code to join. Records added to a joint tab are saved separately from private transactions, and each joint transaction shows who added it. A member can leave a joint tab, and the creator can delete the joint tab for everyone.
 

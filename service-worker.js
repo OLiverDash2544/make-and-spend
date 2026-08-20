@@ -1,4 +1,4 @@
-const cacheName = "make-spend-v47";
+const cacheName = "make-spend-v48";
 const files = [
   "./",
   "./index.html",
