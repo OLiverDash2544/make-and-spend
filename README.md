@@ -336,6 +336,14 @@ Log in in Settings, then use **Save this device to cloud** or **Load cloud data*
 
 Settings also includes **Export full backup** and **Import full backup**. A full backup includes transactions, investments, recurring reminders, categories, colors, exchange rates, and settings.
 
+Settings also includes **Cloud safety backups**. When cloud sync saves, the app first tries to save the older cloud version into `user_app_backups`. This makes accidental empty or old saves much easier to recover from. The app keeps the newest 25 backup versions. To turn this on, run this file once in the Supabase SQL Editor:
+
+```text
+supabase-cloud-backups.sql
+```
+
+If the backup table is not set up yet, normal cloud sync still works, but Settings will show a message asking you to run the cloud backup SQL.
+
 ## Run in VS Code on Windows
 
 1. Open this folder in VS Code:

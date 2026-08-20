@@ -201,6 +201,22 @@ const translations = {
     "Sign in": "Entrar",
     "Sign out": "Sair",
     "Cloud sync is not connected yet.": "A sincronização na nuvem ainda não está conectada.",
+    "Cloud safety backups": "Backups de segurança na nuvem",
+    "The app keeps older cloud versions so you can restore your data if something goes wrong.": "O app guarda versões antigas na nuvem para você restaurar seus dados se algo der errado.",
+    "Create backup now": "Criar backup agora",
+    "Show backups": "Mostrar backups",
+    "Backups need the cloud backup SQL setup.": "Backups precisam da configuração SQL de backup na nuvem.",
+    "No cloud backups yet": "Ainda não há backups na nuvem",
+    "Restore": "Restaurar",
+    "Manual backup": "Backup manual",
+    "Automatic backup before save": "Backup automático antes de salvar",
+    "Backup created.": "Backup criado.",
+    "Loaded cloud backups.": "Backups da nuvem carregados.",
+    "transactions": "transações",
+    "investments": "investimentos",
+    "Cloud backups are not set up yet. Run the cloud backups SQL in Supabase, then refresh this app.": "Os backups na nuvem ainda não foram configurados. Rode o SQL de backups na nuvem no Supabase e atualize este app.",
+    "Restore this backup? This will replace the current account data with the older version.": "Restaurar este backup? Isso vai substituir os dados atuais da conta pela versão antiga.",
+    "Backup restored and saved to cloud.": "Backup restaurado e salvo na nuvem.",
     "PIN lock": "Bloqueio por PIN",
     "Ask for a PIN when this app opens": "Pedir um PIN quando o app abrir",
     "Save PIN setting": "Salvar configuração do PIN",
@@ -496,6 +512,7 @@ let openMoneySettingsPanels = new Set(loadOpenSections("makeSpendMoneySettingsOp
 let selectedMonth = monthKey(today());
 let editingRecurringBillId = "";
 let jointTabUi = { loading: "", latestInviteCode: "" };
+let cloudBackupRows = [];
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -1603,6 +1620,7 @@ function renderSettings() {
   renderCategoryColorList();
   renderEditableList("paymentMethodList", state.paymentMethods, "payment");
   renderCloudStatus();
+  renderCloudBackups();
   renderSettingsTabs();
 }
 
@@ -1691,9 +1709,35 @@ function renderJointTabs() {
   updateJointTabControls();
 }
 
+function renderCloudBackups() {
+  const list = $("#cloudBackupList");
+  if (!list) return;
+  list.innerHTML = cloudBackupRows.length ? cloudBackupRows.map((backup) => {
+    const date = new Date(backup.created_at).toLocaleString(appLocale());
+    const transactionCount = backup.data?.transactions?.length || 0;
+    const investmentCount = backup.data?.investments?.length || 0;
+    return `
+      <div class="cloud-backup-row">
+        <div>
+          <strong>${escapeHtml(date)}</strong>
+          <p>${escapeHtml(backup.reason || "Automatic backup before save")}</p>
+          <p>${transactionCount} transactions · ${investmentCount} investments</p>
+        </div>
+        <button data-restore-cloud-backup="${escapeAttr(backup.id)}">Restore</button>
+      </div>
+    `;
+  }).join("") : `<p class="eyebrow">No cloud backups yet</p>`;
+}
+
 function setJointTabStatus(message) {
   const status = $("#jointTabStatus");
   if (status) status.textContent = translateText(message);
+}
+
+function setCloudBackupStatus(message) {
+  const status = $("#cloudBackupStatus");
+  if (status) status.textContent = translateText(message);
+  localizePage();
 }
 
 function updateJointTabControls() {
@@ -2967,6 +3011,121 @@ async function deleteSharedTransaction(transaction) {
   if (error) throw error;
 }
 
+function cloudBackupErrorMessage(error) {
+  const message = String(error?.message || error || "");
+  if (
+    message.includes("user_app_backups") ||
+    message.includes("schema cache") ||
+    message.includes("cloud backups")
+  ) {
+    return "Cloud backups are not set up yet. Run the cloud backups SQL in Supabase, then refresh this app.";
+  }
+  return message;
+}
+
+async function insertCloudBackup(client, user, data, reason) {
+  const { error } = await client
+    .from("user_app_backups")
+    .insert({
+      user_id: user.id,
+      data,
+      reason,
+      created_at: new Date().toISOString()
+    });
+  if (error) throw error;
+}
+
+async function cleanupCloudBackups(client, user) {
+  const { data, error } = await client
+    .from("user_app_backups")
+    .select("id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .range(25, 200);
+  if (error) throw error;
+  const oldIds = (data || []).map((row) => row.id);
+  if (!oldIds.length) return;
+  const { error: deleteError } = await client
+    .from("user_app_backups")
+    .delete()
+    .in("id", oldIds);
+  if (deleteError) throw deleteError;
+}
+
+async function backupCurrentCloudData(client, user, reason = "Automatic backup before save") {
+  try {
+    const { data, error } = await client
+      .from("user_app_data")
+      .select("data, updated_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data?.data) return true;
+    const lastBackedUpVersion = localStorage.getItem("makeSpendLastBackedUpCloudVersion") || "";
+    if (data.updated_at && data.updated_at === lastBackedUpVersion) return true;
+    await insertCloudBackup(client, user, data.data, reason);
+    if (data.updated_at) localStorage.setItem("makeSpendLastBackedUpCloudVersion", data.updated_at);
+    await cleanupCloudBackups(client, user);
+    return true;
+  } catch (error) {
+    setCloudBackupStatus(cloudBackupErrorMessage(error));
+    return false;
+  }
+}
+
+async function createCloudBackupNow() {
+  try {
+    const user = cloudState.user || await refreshCloudSession();
+    if (!user) throw new Error("Log in before saving to cloud.");
+    const client = getSupabaseClient();
+    await insertCloudBackup(client, user, privateStateForCloud(), "Manual backup");
+    await cleanupCloudBackups(client, user);
+    setCloudBackupStatus("Backup created.");
+    await loadCloudBackups(true);
+  } catch (error) {
+    setCloudBackupStatus(cloudBackupErrorMessage(error));
+  }
+}
+
+async function loadCloudBackups(silent = false) {
+  try {
+    const user = cloudState.user || await refreshCloudSession();
+    if (!user) throw new Error("Log in before loading cloud data.");
+    const client = getSupabaseClient();
+    const { data, error } = await client
+      .from("user_app_backups")
+      .select("id, created_at, reason, data")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (error) throw error;
+    cloudBackupRows = data || [];
+    renderCloudBackups();
+    if (!silent) setCloudBackupStatus("Loaded cloud backups.");
+  } catch (error) {
+    setCloudBackupStatus(cloudBackupErrorMessage(error));
+  }
+}
+
+async function restoreCloudBackup(id) {
+  const backup = cloudBackupRows.find((row) => row.id === id);
+  if (!backup?.data) return;
+  if (!confirm(translateText("Restore this backup? This will replace the current account data with the older version."))) return;
+  try {
+    cloudState.loading = true;
+    state = normalizeState(backup.data);
+    await syncSharedTabs(false);
+    render();
+    cloudState.loading = false;
+    await saveCloudData(false);
+    setCloudBackupStatus("Backup restored and saved to cloud.");
+  } catch (error) {
+    setCloudBackupStatus(cloudBackupErrorMessage(error));
+  } finally {
+    cloudState.loading = false;
+  }
+}
+
 function queueCloudSave() {
   if (!cloudState.enabled || cloudState.loading || cloudState.saving || !cloudState.user || !cloudState.client) return;
   clearTimeout(cloudSaveTimer);
@@ -2982,9 +3141,11 @@ async function saveCloudData(silent = false) {
     const client = getSupabaseClient();
     cloudState.saving = true;
     const updatedAt = new Date().toISOString();
+    const dataForCloud = privateStateForCloud();
+    await backupCurrentCloudData(client, user);
     const { error } = await client
       .from("user_app_data")
-      .upsert({ user_id: user.id, data: privateStateForCloud(), updated_at: updatedAt }, { onConflict: "user_id" });
+      .upsert({ user_id: user.id, data: dataForCloud, updated_at: updatedAt }, { onConflict: "user_id" });
     if (error) throw error;
     cloudState.enabled = true;
     cloudState.lastUpdatedAt = updatedAt;
@@ -3199,6 +3360,9 @@ document.addEventListener("click", async (event) => {
   if (target.id === "joinJointTab") joinJointTab();
   if (target.dataset.leaveJointTab) leaveJointTab(target.dataset.leaveJointTab);
   if (target.dataset.deleteJointTab) deleteJointTab(target.dataset.deleteJointTab);
+  if (target.id === "createCloudBackup") createCloudBackupNow();
+  if (target.id === "loadCloudBackups") loadCloudBackups(false);
+  if (target.dataset.restoreCloudBackup) restoreCloudBackup(target.dataset.restoreCloudBackup);
   if (target.dataset.copyInvite) {
     await navigator.clipboard?.writeText(target.dataset.copyInvite);
     setJointTabStatus("Invite code copied.");

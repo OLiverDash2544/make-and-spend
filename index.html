@@ -186,6 +186,17 @@
             </section>
 
             <section class="panel">
+              <h2>Cloud safety backups</h2>
+              <p class="status-text">The app keeps older cloud versions so you can restore your data if something goes wrong.</p>
+              <div class="cloud-actions cloud-backup-actions">
+                <button id="createCloudBackup" type="button">Create backup now</button>
+                <button id="loadCloudBackups" type="button">Show backups</button>
+              </div>
+              <p class="status-text" id="cloudBackupStatus">Backups need the cloud backup SQL setup.</p>
+              <div id="cloudBackupList" class="editable-list"></div>
+            </section>
+
+            <section class="panel">
               <h2>PIN lock</h2>
               <label class="check-row">
                 <input id="pinEnabled" type="checkbox">
