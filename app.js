@@ -1368,7 +1368,7 @@ function reportComparisonTemplate(months, currency) {
       </div>
       <div class="report-metrics">
         ${comparisonMetricTemplate("Made", thisMonth.income, lastMonth.income, currency, "green")}
-        ${comparisonMetricTemplate("Spent", thisMonth.expenses, lastMonth.expenses, currency, "red")}
+        ${comparisonMetricTemplate("Spent", thisMonth.expenses, lastMonth.expenses, currency, "red", true)}
         ${comparisonMetricTemplate("Invested", thisMonth.investments, lastMonth.investments, currency, "blue")}
         ${comparisonMetricTemplate("Left", thisMonth.remaining, lastMonth.remaining, currency, "")}
       </div>
@@ -1376,13 +1376,14 @@ function reportComparisonTemplate(months, currency) {
   `;
 }
 
-function comparisonMetricTemplate(label, current, previous, currency, colorClass) {
+function comparisonMetricTemplate(label, current, previous, currency, colorClass, lowerIsBetter = false) {
   const change = current - previous;
+  const changeIsGood = lowerIsBetter ? change <= 0 : change >= 0;
   return `
     <div>
       <span>${label}</span>
       <strong class="${colorClass}">${money(current, currency)}</strong>
-      <small class="${change >= 0 ? "green" : "red"}">${change >= 0 ? "+" : ""}${money(change, currency)} from last month</small>
+      <small class="${changeIsGood ? "green" : "red"}">${change >= 0 ? "+" : ""}${money(change, currency)} from last month</small>
     </div>
   `;
 }
