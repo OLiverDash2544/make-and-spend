@@ -332,6 +332,22 @@ The app is configured with this Supabase Project URL:
 https://wzsefkygcxvulukzszfw.supabase.co
 ```
 
+## Supabase Auth Redirects
+
+For email confirmation and password reset links to return to the app, set these in Supabase:
+
+1. Open Supabase.
+2. Go to **Authentication**.
+3. Go to **URL Configuration**.
+4. Set **Site URL** to:
+   `https://oliverdash2544.github.io/make-and-spend/`
+5. Add these **Redirect URLs**:
+   `https://oliverdash2544.github.io/make-and-spend/`
+   `http://127.0.0.1:5500/`
+   `http://localhost:5500/`
+
+If the email template uses a custom link, make sure it uses `{{ .ConfirmationURL }}` or `{{ .RedirectTo }}` so the app's return URL is respected.
+
 Log in in Settings, then use **Save this device to cloud** or **Load cloud data**. After cloud sync is started, the app checks for newer cloud data about every 30 seconds and shows when it last synced.
 
 Settings also includes **Export full backup** and **Import full backup**. A full backup includes transactions, investments, recurring reminders, categories, colors, exchange rates, and settings.

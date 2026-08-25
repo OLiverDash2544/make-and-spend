@@ -445,8 +445,13 @@ const translations = {
     "Cloud settings saved. Sign up or log in to sync.": "Configurações da nuvem salvas. Crie uma conta ou entre para sincronizar.",
     "Account created. Auto sync is on.": "Conta criada. A sincronização automática está ativada.",
     "Account created. Check your email, then sign in.": "Conta criada. Verifique seu e-mail e depois entre.",
+    "Account created. Check Gmail and confirm your email. The link should bring you back to this app.": "Conta criada. Abra o Gmail e confirme seu e-mail. O link deve trazer você de volta para este app.",
+    "Email confirmed. You are signed in.": "E-mail confirmado. Você entrou.",
+    "Email confirmed. Try signing in with your email and password.": "E-mail confirmado. Tente entrar com seu e-mail e senha.",
+    "Email confirmation failed. Try signing in with your email and password.": "A confirmação do e-mail falhou. Tente entrar com seu e-mail e senha.",
     "Signed in. Auto sync is on.": "Você entrou. A sincronização automática está ativada.",
     "Password reset email sent. Check your inbox.": "E-mail de redefinição de senha enviado. Verifique sua caixa de entrada.",
+    "Password reset email sent. The link should bring you back to this app.": "E-mail de redefinição de senha enviado. O link deve trazer você de volta para este app.",
     "Logged out. Local data is still saved on this device.": "Você saiu. Os dados locais ainda estão salvos neste dispositivo.",
     "Sign in before creating a joint tab.": "Entre antes de criar uma aba conjunta.",
     "Sign in before joining a joint tab.": "Entre antes de entrar em uma aba conjunta.",
@@ -2677,6 +2682,27 @@ function saveCloudSettingsFromInputs() {
   setCloudStatus("Cloud settings saved. Now sign up or log in.");
 }
 
+function appAuthRedirectUrl() {
+  if (window.location.protocol === "file:") return "https://oliverdash2544.github.io/make-and-spend/";
+  const url = new URL(window.location.href);
+  url.hash = "";
+  url.search = "";
+  if (url.pathname.endsWith("/index.html")) url.pathname = url.pathname.replace(/index\.html$/, "");
+  return url.toString();
+}
+
+function authReturnParams() {
+  const params = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  hashParams.forEach((value, key) => params.set(key, value));
+  return params;
+}
+
+function cleanAuthReturnUrl() {
+  if (!window.history?.replaceState || window.location.protocol === "file:") return;
+  window.history.replaceState({}, document.title, appAuthRedirectUrl());
+}
+
 function getSupabaseClient() {
   if (!syncConfig.supabaseUrl || !syncConfig.publishableKey) {
     throw new Error("Add your Supabase Project URL and publishable key first.");
@@ -2689,7 +2715,14 @@ function getSupabaseClient() {
     cloudState.clientUrl !== syncConfig.supabaseUrl ||
     cloudState.clientKey !== syncConfig.publishableKey
   ) {
-    cloudState.client = window.supabase.createClient(syncConfig.supabaseUrl, syncConfig.publishableKey);
+    cloudState.client = window.supabase.createClient(syncConfig.supabaseUrl, syncConfig.publishableKey, {
+      auth: {
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        flowType: "implicit",
+        persistSession: true
+      }
+    });
     cloudState.clientUrl = syncConfig.supabaseUrl;
     cloudState.clientKey = syncConfig.publishableKey;
   }
@@ -2714,6 +2747,45 @@ async function finishCloudLogin(successMessage = "Signed in. Auto sync is on.") 
   setCloudStatus(successMessage);
 }
 
+async function handleAuthReturn() {
+  const params = authReturnParams();
+  const hasAuthReturn = params.has("access_token") ||
+    params.has("refresh_token") ||
+    params.has("code") ||
+    params.has("error") ||
+    params.has("error_description");
+  if (!hasAuthReturn) return false;
+
+  try {
+    if (params.has("error")) {
+      throw new Error(params.get("error_description") || "Email confirmation failed. Try signing in with your email and password.");
+    }
+    const client = getSupabaseClient();
+    if (params.has("code") && client.auth.exchangeCodeForSession) {
+      const { error } = await client.auth.exchangeCodeForSession(params.get("code"));
+      if (error) throw error;
+    }
+    await refreshCloudSession();
+    cleanAuthReturnUrl();
+    if (cloudState.user) {
+      setupComplete = true;
+      localStorage.setItem("makeSpendSetupComplete", "true");
+      appUnlocked = true;
+      await finishCloudLogin("Email confirmed. You are signed in.");
+      render();
+      return true;
+    }
+    setCloudStatus("Email confirmed. Try signing in with your email and password.");
+    return true;
+  } catch (error) {
+    cleanAuthReturnUrl();
+    const message = error.message || "Email confirmation failed. Try signing in with your email and password.";
+    setCloudStatus(message);
+    setSetupStatus(message);
+    return true;
+  }
+}
+
 async function signUpCloud(fromSetup = false) {
   try {
     saveCloudSettingsFromInputs();
@@ -2721,7 +2793,13 @@ async function signUpCloud(fromSetup = false) {
     const password = $("#syncPassword").value;
     if (!email || !password) throw new Error("Enter your email and password first.");
     const client = getSupabaseClient();
-    const { data, error } = await client.auth.signUp({ email, password });
+    const { data, error } = await client.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: appAuthRedirectUrl()
+      }
+    });
     if (error) throw error;
     cloudState.user = data.user || data.session?.user || null;
     setupComplete = true;
@@ -2730,8 +2808,8 @@ async function signUpCloud(fromSetup = false) {
     if (data.session) {
       await finishCloudLogin("Account created. Auto sync is on.");
     } else {
-      setCloudStatus("Account created. Check your email, then sign in.");
-      if (fromSetup) setSetupStatus("Account created. Check your email, then sign in.");
+      setCloudStatus("Account created. Check Gmail and confirm your email. The link should bring you back to this app.");
+      if (fromSetup) setSetupStatus("Account created. Check Gmail and confirm your email. The link should bring you back to this app.");
     }
     render();
     return true;
@@ -2772,10 +2850,10 @@ async function resetPasswordCloud(fromSetup = false) {
     if (!email) throw new Error("Enter your email first.");
     const client = getSupabaseClient();
     const { error } = await client.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.href.split("#")[0]
+      redirectTo: appAuthRedirectUrl()
     });
     if (error) throw error;
-    const message = "Password reset email sent. Check your inbox.";
+    const message = "Password reset email sent. The link should bring you back to this app.";
     setCloudStatus(message);
     if (fromSetup) setSetupStatus(message);
   } catch (error) {
@@ -3237,6 +3315,10 @@ function startCloudPolling() {
 async function initCloud() {
   try {
     if (!syncConfig.supabaseUrl) {
+      renderCloudStatus();
+      return;
+    }
+    if (await handleAuthReturn()) {
       renderCloudStatus();
       return;
     }
