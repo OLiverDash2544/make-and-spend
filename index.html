@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-title" content="Make & Spend">
     <title>Make & Spend</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="styles.css?v=71">
+    <link rel="stylesheet" href="styles.css?v=74">
   </head>
   <body>
     <section class="startup-screen" id="setupGate" hidden>
@@ -71,7 +71,21 @@
             <h1>Home</h1>
             <div class="sync-indicator" data-sync-indicator role="status"><i aria-hidden="true"></i><span>Checking sync...</span></div>
           </div>
-          <button class="icon-button" id="themeButton" aria-label="Toggle theme">Mode</button>
+          <div class="topbar-actions">
+            <button class="icon-button privacy-toggle" id="privacyToggleButton" type="button" aria-label="Hide money amounts" aria-pressed="false" title="Hide money amounts">
+              <svg class="eye-open" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2.1 12a10.9 10.9 0 0 1 19.8 0 10.9 10.9 0 0 1-19.8 0Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg class="eye-off" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m3 3 18 18"></path>
+                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path>
+                <path d="M9.9 4.2A10.8 10.8 0 0 1 12 4c5 0 8.7 4.3 9.9 8a12.4 12.4 0 0 1-2 3.7"></path>
+                <path d="M6.6 6.6A12.4 12.4 0 0 0 2.1 12c1.2 3.7 4.9 8 9.9 8 1.6 0 3-.4 4.3-1"></path>
+              </svg>
+            </button>
+            <button class="icon-button" id="themeButton" aria-label="Toggle theme">Mode</button>
+          </div>
         </header>
         <div id="homeDashboard"></div>
       </section>
@@ -598,6 +612,6 @@
     </dialog>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=71"></script>
+    <script src="app.js?v=74"></script>
   </body>
 </html>

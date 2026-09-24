@@ -1,9 +1,9 @@
-const cacheName = "make-spend-v71";
+const cacheName = "make-spend-v74";
 const files = [
   "./",
   "./index.html",
-  "./styles.css?v=71",
-  "./app.js?v=71",
+  "./styles.css?v=74",
+  "./app.js?v=74",
   "./manifest.json",
   "./icon.svg"
 ];

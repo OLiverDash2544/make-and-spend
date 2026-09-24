@@ -289,7 +289,15 @@ body.setup-open .app-shell {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   margin-bottom: 18px;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
 }
 
 .sync-indicator {
@@ -363,6 +371,37 @@ h2 {
   width: 58px;
   border-radius: 50%;
   font-size: 13px;
+}
+
+.privacy-toggle {
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 12px;
+  color: var(--muted);
+}
+
+.privacy-toggle svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+.privacy-toggle .eye-off {
+  display: none;
+}
+
+.privacy-toggle[data-hidden="true"] {
+  background: color-mix(in srgb, var(--muted) 18%, var(--button));
+  color: var(--text);
+}
+
+.privacy-toggle[data-hidden="true"] .eye-open {
+  display: none;
+}
+
+.privacy-toggle[data-hidden="true"] .eye-off {
+  display: block;
 }
 
 .balance-card,

@@ -124,6 +124,7 @@ const defaults = {
     brazil: { startingBalance: 0 }
   },
   theme: "light",
+  hideMoneyAmounts: false,
   incomeSources: ["Job", "Side job", "Gift or present", "Investment return", "Rent received", "Refund", "Other"],
   incomeSourceColors: {},
   expenseCategories: [
@@ -189,6 +190,11 @@ const translations = {
     "PIN": "PIN",
     "Unlock": "Desbloquear",
     "Account": "Conta",
+    "Privacy": "Privacidade",
+    "Hide money amounts": "Ocultar valores",
+    "Show money amounts": "Mostrar valores",
+    "Hide balances and money amounts when someone can see your screen.": "Oculte saldos e valores quando alguém puder ver sua tela.",
+    "Your real amounts stay saved and synced. This only hides them on the screen.": "Seus valores reais continuam salvos e sincronizados. Isso apenas os oculta na tela.",
     "Tutorial": "Tutorial",
     "App tutorial": "Tutorial do app",
     "Open the quick slideshow for a simple tour of the app.": "Abra a apresentação rápida para ver um tour simples do app.",
@@ -834,6 +840,7 @@ function normalizeState(saved) {
     ...defaults,
     ...saved,
     language: saved.language || localStorage.getItem("makeSpendLanguage") || defaults.language,
+    hideMoneyAmounts: saved.hideMoneyAmounts === true,
     currencySettings,
     accounts,
     ratesToCAD: normalizeRates(currencySettings, { ...defaults.ratesToCAD, ...(saved.ratesToCAD || {}) }),
@@ -947,6 +954,7 @@ function accountOptionsTemplate(selectedAccountId = "", includeInactive = false)
 }
 
 function money(amount, currency = state.mainCurrency) {
+  if (state.hideMoneyAmounts) return `•••• ${currency}`;
   const numericAmount = Number(amount) || 0;
   const value = Math.abs(numericAmount).toLocaleString(undefined, {
     minimumFractionDigits: 2,
@@ -1204,6 +1212,7 @@ function restoreItemAt(list, item, index) {
 function render() {
   document.body.classList.toggle("dark", state.theme === "dark");
   document.body.classList.toggle("app-locked", !appUnlocked);
+  renderPrivacyToggle();
   renderHome();
   renderInvestments();
   renderTransactions();
@@ -1215,6 +1224,18 @@ function render() {
   localizePage();
   saveState();
   maybeShowTutorialAfterSetup();
+}
+
+function renderPrivacyToggle() {
+  const button = $("#privacyToggleButton");
+  if (!button) return;
+  const label = state.hideMoneyAmounts ? "Show money amounts" : "Hide money amounts";
+  button.dataset.hidden = String(state.hideMoneyAmounts);
+  button.setAttribute("aria-pressed", String(state.hideMoneyAmounts));
+  button.setAttribute("data-original-aria-label", label);
+  button.setAttribute("data-original-title", label);
+  button.setAttribute("aria-label", translateText(label));
+  button.title = translateText(label);
 }
 
 function renderHome() {
@@ -1850,7 +1871,7 @@ function renderAccountList() {
         </div>
         <label>
           Starting balance
-          <input data-starting-balance-account="${escapeAttr(account.id)}" inputmode="decimal" type="text" autocomplete="off" value="${escapeAttr(state.accountSettings[account.id]?.startingBalance || 0)}">
+          <input data-starting-balance-account="${escapeAttr(account.id)}" inputmode="decimal" type="${state.hideMoneyAmounts ? "password" : "text"}" autocomplete="off" value="${escapeAttr(state.accountSettings[account.id]?.startingBalance || 0)}">
         </label>
         <button data-toggle-account="${escapeAttr(account.id)}"${isLastActive ? " disabled" : ""}>${account.active === false ? "Show" : "Hide"}</button>
         <button data-delete-account="${escapeAttr(account.id)}"${hasRecords ? " disabled" : ""}>Delete</button>
@@ -4171,6 +4192,10 @@ $("#mainCurrency").addEventListener("change", (event) => {
 $("#languageSelect").addEventListener("change", (event) => {
   state.language = event.target.value;
   localStorage.setItem("makeSpendLanguage", state.language);
+  render();
+});
+$("#privacyToggleButton").addEventListener("click", () => {
+  state.hideMoneyAmounts = !state.hideMoneyAmounts;
   render();
 });
 $("#themeButton").addEventListener("click", () => {
