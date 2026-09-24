@@ -111,6 +111,29 @@ const fallbackIncomeSourceColors = [
   "#A2845E"
 ];
 
+const efficientExpenseCategoryOrder = [
+  "Groceries",
+  "Restaurants and takeout",
+  "Gas",
+  "Transportation",
+  "Shopping",
+  "Entertainment",
+  "Health",
+  "Car",
+  "Subscriptions",
+  "Phone",
+  "Internet",
+  "Electricity",
+  "Water",
+  "Rent or housing",
+  "Insurance",
+  "Education",
+  "Gifts",
+  "Travel",
+  "Taxes",
+  "Other"
+];
+
 const defaults = {
   language: "en",
   mainCurrency: "CAD",
@@ -125,30 +148,10 @@ const defaults = {
   },
   theme: "light",
   hideMoneyAmounts: false,
+  expenseCategoryOrderVersion: 1,
   incomeSources: ["Job", "Side job", "Gift or present", "Investment return", "Rent received", "Refund", "Other"],
   incomeSourceColors: {},
-  expenseCategories: [
-    "Rent or housing",
-    "Groceries",
-    "Restaurants and takeout",
-    "Internet",
-    "Phone",
-    "Car",
-    "Gas",
-    "Transportation",
-    "Water",
-    "Electricity",
-    "Insurance",
-    "Health",
-    "Entertainment",
-    "Shopping",
-    "Subscriptions",
-    "Education",
-    "Travel",
-    "Gifts",
-    "Taxes",
-    "Other"
-  ],
+  expenseCategories: efficientExpenseCategoryOrder,
   expenseCategoryColors: {},
   paymentMethods: ["Cash", "Debit card", "Credit card", "Bank transfer", "Other"],
   transactions: [],
@@ -836,11 +839,17 @@ function normalizeState(saved) {
     if (!usedCurrencies.has(code)) delete currencySettings[code];
   });
 
+  const savedExpenseCategories = saved.expenseCategories || defaults.expenseCategories;
+  const expenseCategories = Number(saved.expenseCategoryOrderVersion || 0) < defaults.expenseCategoryOrderVersion
+    ? sortExpenseCategoriesEfficiently(savedExpenseCategories)
+    : savedExpenseCategories;
+
   return {
     ...defaults,
     ...saved,
     language: saved.language || localStorage.getItem("makeSpendLanguage") || defaults.language,
     hideMoneyAmounts: saved.hideMoneyAmounts === true,
+    expenseCategoryOrderVersion: defaults.expenseCategoryOrderVersion,
     currencySettings,
     accounts,
     ratesToCAD: normalizeRates(currencySettings, { ...defaults.ratesToCAD, ...(saved.ratesToCAD || {}) }),
@@ -849,7 +858,7 @@ function normalizeState(saved) {
     accountSettings,
     incomeSources: saved.incomeSources || defaults.incomeSources,
     incomeSourceColors: { ...defaults.incomeSourceColors, ...(saved.incomeSourceColors || {}) },
-    expenseCategories: saved.expenseCategories || defaults.expenseCategories,
+    expenseCategories,
     expenseCategoryColors: { ...defaults.expenseCategoryColors, ...(saved.expenseCategoryColors || {}) },
     paymentMethods: saved.paymentMethods || defaults.paymentMethods,
     transactions: saved.transactions || [],
@@ -858,6 +867,15 @@ function normalizeState(saved) {
     recurringBills: saved.recurringBills || [],
     sharedTabs: saved.sharedTabs || []
   };
+}
+
+function sortExpenseCategoriesEfficiently(categories) {
+  const original = [...new Set(categories)];
+  const known = efficientExpenseCategoryOrder.filter((category) => original.includes(category));
+  const custom = original.filter((category) => !efficientExpenseCategoryOrder.includes(category));
+  const monthlyStart = known.findIndex((category) => category === "Subscriptions");
+  if (!custom.length || monthlyStart < 0) return [...known, ...custom];
+  return [...known.slice(0, monthlyStart), ...custom, ...known.slice(monthlyStart)];
 }
 
 function normalizeRates(currencySettings, rates) {
@@ -1227,15 +1245,15 @@ function render() {
 }
 
 function renderPrivacyToggle() {
-  const button = $("#privacyToggleButton");
-  if (!button) return;
   const label = state.hideMoneyAmounts ? "Show money amounts" : "Hide money amounts";
-  button.dataset.hidden = String(state.hideMoneyAmounts);
-  button.setAttribute("aria-pressed", String(state.hideMoneyAmounts));
-  button.setAttribute("data-original-aria-label", label);
-  button.setAttribute("data-original-title", label);
-  button.setAttribute("aria-label", translateText(label));
-  button.title = translateText(label);
+  $$('[data-privacy-toggle]').forEach((button) => {
+    button.dataset.hidden = String(state.hideMoneyAmounts);
+    button.setAttribute("aria-pressed", String(state.hideMoneyAmounts));
+    button.setAttribute("data-original-aria-label", label);
+    button.setAttribute("data-original-title", label);
+    button.setAttribute("aria-label", translateText(label));
+    button.title = translateText(label);
+  });
 }
 
 function renderHome() {
@@ -4194,9 +4212,11 @@ $("#languageSelect").addEventListener("change", (event) => {
   localStorage.setItem("makeSpendLanguage", state.language);
   render();
 });
-$("#privacyToggleButton").addEventListener("click", () => {
-  state.hideMoneyAmounts = !state.hideMoneyAmounts;
-  render();
+$$('[data-privacy-toggle]').forEach((button) => {
+  button.addEventListener("click", () => {
+    state.hideMoneyAmounts = !state.hideMoneyAmounts;
+    render();
+  });
 });
 $("#themeButton").addEventListener("click", () => {
   state.theme = state.theme === "dark" ? "light" : "dark";
