@@ -189,6 +189,70 @@ const translations = {
     "PIN": "PIN",
     "Unlock": "Desbloquear",
     "Account": "Conta",
+    "Tutorial": "Tutorial",
+    "App tutorial": "Tutorial do app",
+    "Open the quick slideshow for a simple tour of the app.": "Abra a apresentação rápida para ver um tour simples do app.",
+    "Open tutorial": "Abrir tutorial",
+    "Quick tutorial": "Tutorial rápido",
+    "Back": "Voltar",
+    "Next": "Próximo",
+    "Start using app": "Começar a usar o app",
+    "Welcome to Make & Spend": "Bem-vindo ao Make & Spend",
+    "Keep your money simple: add what you make, add what you spend, and watch each currency tab stay organized.": "Mantenha seu dinheiro simples: adicione o que você ganha, adicione o que você gasta e veja cada aba de moeda ficar organizada.",
+    "Add income and expenses": "Adicione renda e despesas",
+    "Use the big buttons on Home. Income is green, expenses are red, and the app updates your monthly totals automatically.": "Use os botões grandes no Início. Renda é verde, despesas são vermelhas e o app atualiza seus totais mensais automaticamente.",
+    "Keep currencies separate": "Mantenha moedas separadas",
+    "Canada, Brasil, Japan, or any custom currency can have its own tab, balance, and report without mixing everything together.": "Canadá, Brasil, Japão ou qualquer moeda personalizada pode ter sua própria aba, saldo e relatório sem misturar tudo.",
+    "Track investments simply": "Acompanhe investimentos de forma simples",
+    "Record where you invested money, how much you put in, and how much you took out. No confusing profit tools.": "Registre onde você investiu dinheiro, quanto colocou e quanto retirou. Sem ferramentas confusas de lucro.",
+    "Use joint tabs": "Use abas conjuntas",
+    "Create a shared tab, send the invite code, and both people can add records to the same place.": "Crie uma aba compartilhada, envie o código de convite e as duas pessoas podem adicionar registros no mesmo lugar.",
+    "Check reports and backups": "Veja relatórios e backups",
+    "Reports compare months and years. Cloud safety backups keep older copies so your data is easier to recover.": "Relatórios comparam meses e anos. Backups de segurança na nuvem guardam cópias antigas para facilitar a recuperação dos dados.",
+    "Current balance": "Saldo atual",
+    "Add investment": "Adicionar investimento",
+    "Amount": "Valor",
+    "Category": "Categoria",
+    "Note": "Observação",
+    "Groceries": "Mercado",
+    "Milk and bread": "Leite e pão",
+    "Money setup": "Configuração do dinheiro",
+    "Canadian dollar - CAD": "Dólar canadense - CAD",
+    "Brazilian real - BRL": "Real brasileiro - BRL",
+    "Japanese yen - JPY": "Iene japonês - JPY",
+    "Conversion rates": "Taxas de conversão",
+    "Total invested": "Total investido",
+    "Put in": "Coloquei",
+    "Took out": "Retirei",
+    "Wealthsimple": "Wealthsimple",
+    "Bank transfer": "Transferência bancária",
+    "Joint tab name": "Nome da aba conjunta",
+    "Currency": "Moeda",
+    "Create joint tab": "Criar aba conjunta",
+    "Invite code": "Código de convite",
+    "Send this to the other person.": "Envie isso para a outra pessoa.",
+    "August": "Agosto",
+    "Spending by category": "Gastos por categoria",
+    "Restaurants": "Restaurantes",
+    "Phone": "Celular",
+    "Shopping": "Compras",
+    "How to use Make & Spend": "Como usar Make & Spend",
+    "Sign in first": "Entre primeiro",
+    "Use your account so your phone and computer can share the same data.": "Use sua conta para que seu celular e computador possam compartilhar os mesmos dados.",
+    "Add money you make": "Adicione o dinheiro que você ganha",
+    "Tap Add Income, enter the amount, choose the source, and save it.": "Toque em Adicionar renda, coloque o valor, escolha a fonte e salve.",
+    "Add money you spend": "Adicione o dinheiro que você gasta",
+    "Tap Add Expense, choose the category, and the app updates your totals.": "Toque em Adicionar despesa, escolha a categoria e o app atualiza seus totais.",
+    "Use currency tabs": "Use abas de moeda",
+    "Canada, Brasil, and other tabs keep their own balances and reports.": "Canadá, Brasil e outras abas mantêm seus próprios saldos e relatórios.",
+    "Record investments simply": "Registre investimentos de forma simples",
+    "Track money you put into investments and money you take out.": "Acompanhe o dinheiro que você colocou em investimentos e o dinheiro que retirou.",
+    "Share a joint tab": "Compartilhe uma aba conjunta",
+    "Create a joint tab, copy the invite code, and send it to the other person.": "Crie uma aba conjunta, copie o código de convite e envie para a outra pessoa.",
+    "Check reports": "Veja os relatórios",
+    "Reports show each month and year separately, without mixing currencies.": "Os relatórios mostram cada mês e ano separadamente, sem misturar moedas.",
+    "Keep backups on": "Mantenha backups ativados",
+    "Cloud safety backups help restore older data if something goes wrong.": "Backups de segurança na nuvem ajudam a restaurar dados antigos se algo der errado.",
     "Money setup": "Configuração do dinheiro",
     "Lists": "Listas",
     "Recurring bills": "Contas recorrentes",
@@ -266,6 +330,12 @@ const translations = {
     "New category": "Nova categoria",
     "Payment methods": "Formas de pagamento",
     "New payment method": "Nova forma de pagamento",
+    "Edit order": "Editar ordem",
+    "Done": "Concluído",
+    "Drag items or use the arrows.": "Arraste os itens ou use as setas.",
+    "Drag to reorder": "Arraste para reordenar",
+    "Move up": "Mover para cima",
+    "Move down": "Mover para baixo",
     "Add": "Adicionar",
     "Add reminder": "Adicionar lembrete",
     "Bill name": "Nome da conta",
@@ -480,6 +550,23 @@ const translations = {
     "Auto-loaded cloud data.": "Dados da nuvem carregados automaticamente.",
     "Loaded cloud data onto this device.": "Dados da nuvem carregados neste dispositivo.",
     "Loaded new cloud data from your other device.": "Novos dados da nuvem carregados do outro dispositivo.",
+    "Checking sync...": "Verificando sincronização...",
+    "Cloud saved": "Salvo na nuvem",
+    "Saving...": "Salvando...",
+    "Syncing...": "Sincronizando...",
+    "Offline - saved on device": "Offline - salvo no dispositivo",
+    "Not signed in": "Não conectado",
+    "Sync paused": "Sincronização pausada",
+    "Sync problem": "Problema de sincronização",
+    "Undo": "Desfazer",
+    "Item deleted.": "Item excluído.",
+    "Transaction deleted.": "Transação excluída.",
+    "Investment deleted.": "Investimento excluído.",
+    "Transfer deleted.": "Transferência excluída.",
+    "Reminder deleted.": "Lembrete excluído.",
+    "Income source deleted.": "Fonte de renda excluída.",
+    "Expense category deleted.": "Categoria de despesa excluída.",
+    "Payment method deleted.": "Forma de pagamento excluída.",
     "Full backup downloaded. Keep that file somewhere safe.": "Backup completo baixado. Guarde esse arquivo em um lugar seguro.",
     "Backup imported on this device.": "Backup importado neste dispositivo.",
     "That backup file could not be opened.": "Não foi possível abrir esse arquivo de backup.",
@@ -509,15 +596,56 @@ let cloudState = {
   enabled: localStorage.getItem("makeSpendCloudEnabled") === "true",
   lastUpdatedAt: localStorage.getItem("makeSpendCloudUpdatedAt") || "",
   loading: false,
-  saving: false
+  saving: false,
+  pendingSave: false,
+  syncError: ""
 };
 let filters = { kind: "all", category: "all", currency: "all", search: "" };
-let openSettingsPanels = new Set(loadOpenSections("makeSpendSettingsOpen", ["account"]));
-let openMoneySettingsPanels = new Set(loadOpenSections("makeSpendMoneySettingsOpen", ["main"]));
+let openSettingsPanels = new Set(loadOpenSections("makeSpendSettingsOpen", ["account"]).slice(-1));
+let openMoneySettingsPanels = new Set(loadOpenSections("makeSpendMoneySettingsOpen", ["main"]).slice(-1));
+let orderingListTypes = new Set();
+let activeListDrag = null;
 let selectedMonth = monthKey(today());
 let editingRecurringBillId = "";
 let jointTabUi = { loading: "", latestInviteCode: "" };
 let cloudBackupRows = [];
+let tutorialIndex = 0;
+let tutorialAutoQueued = false;
+let pendingUndo = null;
+let undoTimer = null;
+
+const tutorialSlides = [
+  {
+    picture: "balance",
+    title: "Welcome to Make & Spend",
+    body: "Keep your money simple: add what you make, add what you spend, and watch each currency tab stay organized."
+  },
+  {
+    picture: "actions",
+    title: "Add income and expenses",
+    body: "Use the big buttons on Home. Income is green, expenses are red, and the app updates your monthly totals automatically."
+  },
+  {
+    picture: "currencies",
+    title: "Keep currencies separate",
+    body: "Canada, Brasil, Japan, or any custom currency can have its own tab, balance, and report without mixing everything together."
+  },
+  {
+    picture: "investments",
+    title: "Track investments simply",
+    body: "Record where you invested money, how much you put in, and how much you took out. No confusing profit tools."
+  },
+  {
+    picture: "joint",
+    title: "Use joint tabs",
+    body: "Create a shared tab, send the invite code, and both people can add records to the same place."
+  },
+  {
+    picture: "reports",
+    title: "Check reports and backups",
+    body: "Reports compare months and years. Cloud safety backups keep older copies so your data is easier to recover."
+  }
+];
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -1020,6 +1148,59 @@ function shiftMonth(key, amount) {
   return date.toISOString().slice(0, 7);
 }
 
+function syncIndicatorDetails() {
+  if (!navigator.onLine) return { state: "offline", text: "Offline - saved on device" };
+  if (cloudState.syncError) return { state: "error", text: "Sync problem" };
+  if (cloudState.saving || cloudState.pendingSave) return { state: "saving", text: "Saving..." };
+  if (cloudState.loading) return { state: "saving", text: "Syncing..." };
+  if (!cloudState.user) return { state: "idle", text: "Not signed in" };
+  if (!cloudState.enabled) return { state: "idle", text: "Sync paused" };
+  return { state: "saved", text: "Cloud saved" };
+}
+
+function renderSyncIndicator() {
+  const details = syncIndicatorDetails();
+  $$('[data-sync-indicator]').forEach((indicator) => {
+    indicator.dataset.state = details.state;
+    const label = indicator.querySelector("span");
+    if (label) label.textContent = translateText(details.text);
+  });
+}
+
+function hideUndo() {
+  clearTimeout(undoTimer);
+  undoTimer = null;
+  pendingUndo = null;
+  const toast = $("#undoToast");
+  if (toast) toast.hidden = true;
+}
+
+function showUndo(message, undoAction) {
+  clearTimeout(undoTimer);
+  pendingUndo = undoAction;
+  const toast = $("#undoToast");
+  if (!toast) return;
+  $("#undoMessage").textContent = translateText(message);
+  $("#undoDelete").textContent = translateText("Undo");
+  toast.hidden = false;
+  undoTimer = setTimeout(hideUndo, 8000);
+}
+
+async function undoLastDelete() {
+  const undoAction = pendingUndo;
+  if (!undoAction) return;
+  clearTimeout(undoTimer);
+  undoTimer = null;
+  pendingUndo = null;
+  $("#undoToast").hidden = true;
+  await undoAction();
+}
+
+function restoreItemAt(list, item, index) {
+  if (!list || list.some((existing) => existing.id === item.id)) return;
+  list.splice(Math.min(Math.max(index, 0), list.length), 0, item);
+}
+
 function render() {
   document.body.classList.toggle("dark", state.theme === "dark");
   document.body.classList.toggle("app-locked", !appUnlocked);
@@ -1030,8 +1211,10 @@ function render() {
   renderSettings();
   renderSetupGate();
   renderPinLock();
+  renderSyncIndicator();
   localizePage();
   saveState();
+  maybeShowTutorialAfterSetup();
 }
 
 function renderHome() {
@@ -2034,13 +2217,34 @@ function renderCategoryColorList() {
 }
 
 function renderEditableList(id, items, type) {
-  $(`#${id}`).innerHTML = items.map((item) => `
-    <div class="editable-item">
-      <span>${escapeHtml(item)}</span>
-      <button data-rename-list="${type}" data-name="${escapeAttr(item)}">Rename</button>
-      <button data-delete-list="${type}" data-name="${escapeAttr(item)}">Delete</button>
+  const listElement = $(`#${id}`);
+  const isOrdering = orderingListTypes.has(type);
+  const panel = listElement.closest(".panel");
+  const toggleButton = panel?.querySelector(`[data-toggle-list-order="${type}"]`);
+  listElement.classList.toggle("ordering", isOrdering);
+  panel?.classList.toggle("list-ordering", isOrdering);
+  if (toggleButton) {
+    toggleButton.textContent = isOrdering ? "Done" : "Edit order";
+    toggleButton.setAttribute("aria-pressed", String(isOrdering));
+  }
+
+  const help = isOrdering ? `<p class="list-order-help">Drag items or use the arrows.</p>` : "";
+  listElement.innerHTML = `${help}${items.map((item, index) => `
+    <div class="editable-item${isOrdering ? " order-item" : ""}" data-list-type="${type}" data-list-item-name="${escapeAttr(item)}">
+      ${isOrdering ? `
+        <button class="list-drag-handle" type="button" data-list-drag-handle aria-label="Drag to reorder: ${escapeAttr(item)}" title="Drag to reorder"></button>
+        <span>${escapeHtml(item)}</span>
+        <div class="list-order-controls">
+          <button class="move-list-button move-up" type="button" data-move-list="${type}" data-name="${escapeAttr(item)}" data-direction="up" aria-label="Move up" title="Move up"${index === 0 ? " disabled" : ""}><span aria-hidden="true"></span></button>
+          <button class="move-list-button move-down" type="button" data-move-list="${type}" data-name="${escapeAttr(item)}" data-direction="down" aria-label="Move down" title="Move down"${index === items.length - 1 ? " disabled" : ""}><span aria-hidden="true"></span></button>
+        </div>
+      ` : `
+        <span>${escapeHtml(item)}</span>
+        <button data-rename-list="${type}" data-name="${escapeAttr(item)}">Rename</button>
+        <button data-delete-list="${type}" data-name="${escapeAttr(item)}">Delete</button>
+      `}
     </div>
-  `).join("");
+  `).join("")}`;
 }
 
 function renderRecurringBills() {
@@ -2118,9 +2322,16 @@ function editRecurringBill(id) {
 
 function deleteRecurringBill(id) {
   if (!confirm("Delete this recurring reminder?")) return;
-  state.recurringBills = state.recurringBills.filter((bill) => bill.id !== id);
+  const index = state.recurringBills.findIndex((bill) => bill.id === id);
+  const deletedBill = state.recurringBills[index];
+  if (!deletedBill) return;
+  state.recurringBills.splice(index, 1);
   if (editingRecurringBillId === id) resetRecurringForm();
   render();
+  showUndo("Reminder deleted.", () => {
+    restoreItemAt(state.recurringBills, deletedBill, index);
+    render();
+  });
 }
 
 function addRecurringExpense(id) {
@@ -2344,6 +2555,47 @@ function addListItem(type) {
   render();
 }
 
+function editableListForType(type) {
+  if (type === "income") return state.incomeSources;
+  if (type === "expense") return state.expenseCategories;
+  if (type === "payment") return state.paymentMethods;
+  return null;
+}
+
+function toggleListOrdering(type) {
+  if (!editableListForType(type)) return;
+  if (orderingListTypes.has(type)) orderingListTypes.delete(type);
+  else orderingListTypes.add(type);
+  renderSettings();
+  localizePage();
+}
+
+function moveListItem(type, name, direction) {
+  const list = editableListForType(type);
+  if (!list) return;
+  const index = list.indexOf(name);
+  const nextIndex = direction === "up" ? index - 1 : index + 1;
+  if (index < 0 || nextIndex < 0 || nextIndex >= list.length) return;
+  const [item] = list.splice(index, 1);
+  list.splice(nextIndex, 0, item);
+  render();
+}
+
+function finishListDrag() {
+  if (!activeListDrag) return;
+  const { row, listElement, type } = activeListDrag;
+  const list = editableListForType(type);
+  if (list) {
+    const orderedItems = [...listElement.querySelectorAll(".order-item")]
+      .map((item) => item.dataset.listItemName);
+    list.splice(0, list.length, ...orderedItems);
+  }
+  row.classList.remove("dragging");
+  document.body.classList.remove("reordering-list");
+  activeListDrag = null;
+  render();
+}
+
 function renameListItem(type, oldName) {
   const list = type === "income" ? state.incomeSources : type === "expense" ? state.expenseCategories : state.paymentMethods;
   const name = prompt("New name", oldName)?.trim();
@@ -2368,6 +2620,11 @@ function deleteListItem(type, name) {
   if (!confirm(`Delete "${name}"?`)) return;
   const list = type === "income" ? state.incomeSources : type === "expense" ? state.expenseCategories : state.paymentMethods;
   const index = list.indexOf(name);
+  if (index < 0) return;
+  const oldColor = colorStoreForType(type)?.[name] || "";
+  const changedBills = type === "expense"
+    ? state.recurringBills.filter((bill) => bill.category === name).map((bill) => ({ id: bill.id, category: bill.category }))
+    : [];
   if (index >= 0) list.splice(index, 1);
   if (type === "expense") {
     state.recurringBills.forEach((bill) => {
@@ -2376,6 +2633,22 @@ function deleteListItem(type, name) {
   }
   removeCustomColor(type, name);
   render();
+  const message = type === "income"
+    ? "Income source deleted."
+    : type === "expense"
+      ? "Expense category deleted."
+      : "Payment method deleted.";
+  showUndo(message, () => {
+    const currentList = editableListForType(type);
+    if (currentList && !currentList.includes(name)) currentList.splice(Math.min(index, currentList.length), 0, name);
+    const colorStore = colorStoreForType(type);
+    if (colorStore && oldColor) colorStore[name] = oldColor;
+    changedBills.forEach((savedBill) => {
+      const bill = state.recurringBills.find((item) => item.id === savedBill.id);
+      if (bill) bill.category = savedBill.category;
+    });
+    render();
+  });
 }
 
 function colorStoreForType(type) {
@@ -2552,6 +2825,230 @@ function renderPinLock() {
   document.body.classList.toggle("app-locked", shouldLock);
 }
 
+function maybeShowTutorialAfterSetup() {
+  if (tutorialAutoQueued || localStorage.getItem("makeSpendTutorialSeen") === "true") return;
+  if (!setupComplete || !appUnlocked || !cloudState.user) return;
+  tutorialAutoQueued = true;
+  setTimeout(() => {
+    if (localStorage.getItem("makeSpendTutorialSeen") !== "true") openTutorial(0);
+  }, 450);
+}
+
+function tutorialPictureTemplate(kind) {
+  const pictures = {
+    balance: `
+      <div class="tutorial-app-preview tutorial-home-preview">
+        <div class="tutorial-status-row">
+          <span class="tutorial-small-label">Make & Spend</span>
+          <strong>Home</strong>
+        </div>
+        <div class="tutorial-tab-strip">
+          <span class="active">Canada</span>
+          <span>Brasil</span>
+          <span>Japan</span>
+        </div>
+        <div class="tutorial-balance-card">
+          <span class="tutorial-small-label">Current balance</span>
+          <strong>$1,574.03 CAD</strong>
+        </div>
+        <div class="tutorial-metric-grid">
+          <div><span class="tutorial-small-label">Made</span><strong class="green">$1,635</strong></div>
+          <div><span class="tutorial-small-label">Spent</span><strong class="red">$61</strong></div>
+        </div>
+        <div class="tutorial-bottom-tabs">
+          <span class="active">Home</span>
+          <span>Transactions</span>
+          <span>Reports</span>
+          <span>Settings</span>
+        </div>
+      </div>
+    `,
+    actions: `
+      <div class="tutorial-app-preview tutorial-form-preview">
+        <div class="tutorial-action-row">
+          <span class="income">Add income</span>
+          <span class="expense">Add expense</span>
+        </div>
+        <div class="tutorial-form-card">
+          <div class="tutorial-form-head">
+            <strong>Add Expense</strong>
+            <span>x</span>
+          </div>
+          <label>Amount</label>
+          <div class="tutorial-input-line">$ 24.80</div>
+          <label>Category</label>
+          <div class="tutorial-select-line">Groceries</div>
+          <label>Note</label>
+          <div class="tutorial-note-line">Milk and bread</div>
+          <button type="button">Save</button>
+        </div>
+      </div>
+    `,
+    currencies: `
+      <div class="tutorial-app-preview">
+        <div class="tutorial-status-row">
+          <span class="tutorial-small-label">Money setup</span>
+          <strong>Settings</strong>
+        </div>
+        <div class="tutorial-currency-card active">
+          <strong>Canada</strong>
+          <span>Canadian dollar - CAD</span>
+          <em>$</em>
+        </div>
+        <div class="tutorial-currency-card">
+          <strong>Brasil</strong>
+          <span>Brazilian real - BRL</span>
+          <em>R$</em>
+        </div>
+        <div class="tutorial-currency-card">
+          <strong>Japan</strong>
+          <span>Japanese yen - JPY</span>
+          <em>¥</em>
+        </div>
+        <div class="tutorial-rate-card">
+          <span class="tutorial-small-label">Conversion rates</span>
+          <strong>1 USD = 1.36 CAD</strong>
+        </div>
+      </div>
+    `,
+    investments: `
+      <div class="tutorial-app-preview">
+        <div class="tutorial-status-row">
+          <span class="tutorial-small-label">Investments</span>
+          <strong>Canada</strong>
+        </div>
+        <div class="tutorial-balance-card blue-card">
+          <span class="tutorial-small-label">Total invested</span>
+          <strong>$420.00 CAD</strong>
+        </div>
+        <div class="tutorial-invest-list">
+          <div>
+            <span class="tutorial-small-label">Put in</span>
+            <strong>Wealthsimple</strong>
+            <em>+$200 CAD</em>
+          </div>
+          <div>
+            <span class="tutorial-small-label">Took out</span>
+            <strong>Bank transfer</strong>
+            <em>-$50 CAD</em>
+          </div>
+        </div>
+        <button class="tutorial-blue-button" type="button">Add investment</button>
+      </div>
+    `,
+    joint: `
+      <div class="tutorial-app-preview">
+        <div class="tutorial-status-row">
+          <span class="tutorial-small-label">Joint tabs</span>
+          <strong>Settings</strong>
+        </div>
+        <div class="tutorial-form-card compact">
+          <label>Joint tab name</label>
+          <div class="tutorial-input-line">Joint Brasil Oliver</div>
+          <label>Currency</label>
+          <div class="tutorial-select-line">Brazilian real - BRL</div>
+          <button type="button">Create joint tab</button>
+        </div>
+        <div class="tutorial-invite-card">
+          <span class="tutorial-small-label">Invite code</span>
+          <strong>7K4M9Q2L</strong>
+          <p>Send this to the other person.</p>
+        </div>
+      </div>
+    `,
+    reports: `
+      <div class="tutorial-app-preview tutorial-report-preview">
+        <div class="tutorial-report-title-row">
+          <div>
+            <strong>Canada reports</strong>
+            <span class="tutorial-small-label">CAD</span>
+          </div>
+          <button type="button">Minimize</button>
+        </div>
+        <div class="tutorial-comparison-card">
+          <div class="tutorial-comparison-head">
+            <span>This month vs last month</span>
+            <strong class="blue">$0.00 CAD</strong>
+          </div>
+          <div class="tutorial-comparison-metrics">
+            <div>
+              <span class="tutorial-small-label">Made</span>
+              <strong class="green">$0.00 CAD</strong>
+              <small class="green">+$0.00 CAD from last month</small>
+            </div>
+            <div>
+              <span class="tutorial-small-label">Spent</span>
+              <strong class="red">$0.00 CAD</strong>
+              <small class="green">+$0.00 CAD from last month</small>
+            </div>
+            <div>
+              <span class="tutorial-small-label">Invested</span>
+              <strong class="blue">$0.00 CAD</strong>
+              <small class="green">+$0.00 CAD from last month</small>
+            </div>
+            <div>
+              <span class="tutorial-small-label">Left</span>
+              <strong>$0.00 CAD</strong>
+              <small class="green">+$0.00 CAD from last month</small>
+            </div>
+          </div>
+        </div>
+        <div class="tutorial-months-preview">
+          <strong>Months</strong>
+          <span>No months yet</span>
+        </div>
+      </div>
+    `
+  };
+  return `<div class="tutorial-visual ${escapeAttr(kind)}">${pictures[kind] || pictures.balance}</div>`;
+}
+
+function renderTutorialSlide() {
+  const slide = tutorialSlides[tutorialIndex] || tutorialSlides[0];
+  const slideRoot = $("#tutorialSlide");
+  if (!slideRoot) return;
+  slideRoot.innerHTML = `
+    ${tutorialPictureTemplate(slide.picture)}
+    <div class="tutorial-copy">
+      <h3>${escapeHtml(slide.title)}</h3>
+      <p>${escapeHtml(slide.body)}</p>
+    </div>
+  `;
+  $("#tutorialDots").innerHTML = tutorialSlides.map((_, index) => `
+    <button type="button" class="${index === tutorialIndex ? "active" : ""}" data-tutorial-dot="${index}" aria-label="Slide ${index + 1}"></button>
+  `).join("");
+  $("#tutorialBack").disabled = tutorialIndex === 0;
+  $("#tutorialNext").textContent = tutorialIndex === tutorialSlides.length - 1 ? translateText("Start using app") : translateText("Next");
+  localizePage();
+}
+
+function openTutorial(startIndex = 0) {
+  const dialog = $("#tutorialDialog");
+  if (!dialog) return;
+  tutorialIndex = Math.max(0, Math.min(startIndex, tutorialSlides.length - 1));
+  renderTutorialSlide();
+  if (!dialog.open) openDialog(dialog);
+}
+
+function closeTutorial(markSeen = true) {
+  if (markSeen) localStorage.setItem("makeSpendTutorialSeen", "true");
+  closeDialog($("#tutorialDialog"));
+}
+
+function nextTutorialSlide() {
+  if (tutorialIndex >= tutorialSlides.length - 1) {
+    closeTutorial(true);
+    return;
+  }
+  tutorialIndex += 1;
+  renderTutorialSlide();
+}
+
+function previousTutorialSlide() {
+  tutorialIndex = Math.max(0, tutorialIndex - 1);
+  renderTutorialSlide();
+}
+
 function setupSelectedAccounts() {
   const selected = $$("[data-setup-currency]:checked").map((input) => input.dataset.setupCurrency);
   const customCode = normalizeCurrencyCode($("#setupCustomCode")?.value || "");
@@ -2671,6 +3168,7 @@ function renderCloudStatus(message = "") {
 
 function setCloudStatus(message) {
   renderCloudStatus(message);
+  renderSyncIndicator();
   localizePage();
 }
 
@@ -2871,6 +3369,8 @@ async function logoutCloud() {
   }
   cloudState.user = null;
   cloudState.enabled = false;
+  cloudState.pendingSave = false;
+  cloudState.syncError = "";
   localStorage.setItem("makeSpendCloudEnabled", "false");
   setCloudStatus("Logged out. Local data is still saved on this device.");
 }
@@ -3207,6 +3707,9 @@ async function restoreCloudBackup(id) {
 function queueCloudSave() {
   if (!cloudState.enabled || cloudState.loading || cloudState.saving || !cloudState.user || !cloudState.client) return;
   clearTimeout(cloudSaveTimer);
+  cloudState.pendingSave = true;
+  cloudState.syncError = "";
+  renderSyncIndicator();
   cloudSaveTimer = setTimeout(() => {
     saveCloudData(true);
   }, 1200);
@@ -3218,6 +3721,9 @@ async function saveCloudData(silent = false) {
     if (!user) throw new Error("Log in before saving to cloud.");
     const client = getSupabaseClient();
     cloudState.saving = true;
+    cloudState.pendingSave = false;
+    cloudState.syncError = "";
+    renderSyncIndicator();
     const updatedAt = new Date().toISOString();
     const dataForCloud = privateStateForCloud();
     await backupCurrentCloudData(client, user);
@@ -3233,10 +3739,13 @@ async function saveCloudData(silent = false) {
     startCloudPolling();
     return true;
   } catch (error) {
+    cloudState.syncError = error.message || "Cloud save failed.";
     if (!silent) setCloudStatus(error.message);
     return false;
   } finally {
     cloudState.saving = false;
+    cloudState.pendingSave = false;
+    renderSyncIndicator();
   }
 }
 
@@ -3245,6 +3754,9 @@ async function loadCloudData(silent = false) {
     const user = cloudState.user || await refreshCloudSession();
     if (!user) throw new Error("Log in before loading cloud data.");
     const client = getSupabaseClient();
+    cloudState.loading = true;
+    cloudState.syncError = "";
+    renderSyncIndicator();
     const { data, error } = await client
       .from("user_app_data")
       .select("data, updated_at")
@@ -3267,10 +3779,12 @@ async function loadCloudData(silent = false) {
     startCloudPolling();
     return true;
   } catch (error) {
+    cloudState.syncError = error.message || "Cloud load failed.";
     if (!silent) setCloudStatus(error.message);
     return false;
   } finally {
     cloudState.loading = false;
+    renderSyncIndicator();
   }
 }
 
@@ -3285,7 +3799,9 @@ async function pullLatestCloudData() {
       .select("data, updated_at")
       .eq("user_id", user.id)
       .maybeSingle();
-    if (error || !data?.data || !data.updated_at) {
+    if (error) throw error;
+    cloudState.syncError = "";
+    if (!data?.data || !data.updated_at) {
       cloudState.loading = true;
       await syncSharedTabs(true);
       return;
@@ -3302,8 +3818,11 @@ async function pullLatestCloudData() {
     }
     cloudState.loading = true;
     await syncSharedTabs(true);
+  } catch (error) {
+    cloudState.syncError = error.message || "Cloud sync failed.";
   } finally {
     cloudState.loading = false;
+    renderSyncIndicator();
   }
 }
 
@@ -3330,7 +3849,10 @@ async function initCloud() {
     }
     renderCloudStatus();
   } catch (error) {
+    cloudState.syncError = error.message || "Cloud sync failed.";
     setCloudStatus(error.message);
+  } finally {
+    renderSyncIndicator();
   }
 }
 
@@ -3356,6 +3878,11 @@ document.addEventListener("click", async (event) => {
   const target = event.target.closest("button, [data-open-form]");
   if (!target) return;
 
+  if (target.id === "undoDelete") {
+    await undoLastDelete();
+    return;
+  }
+
   if (target.dataset.tab) {
     $$(".screen").forEach((screen) => screen.classList.toggle("active", screen.id === target.dataset.tab));
     $$(".tabs button").forEach((button) => button.classList.toggle("active", button === target));
@@ -3365,6 +3892,7 @@ document.addEventListener("click", async (event) => {
     if (openSettingsPanels.has(target.dataset.settingsTab)) {
       openSettingsPanels.delete(target.dataset.settingsTab);
     } else {
+      openSettingsPanels.clear();
       openSettingsPanels.add(target.dataset.settingsTab);
     }
     saveOpenSections("makeSpendSettingsOpen", openSettingsPanels);
@@ -3375,6 +3903,7 @@ document.addEventListener("click", async (event) => {
     if (openMoneySettingsPanels.has(target.dataset.moneySettingsTab)) {
       openMoneySettingsPanels.delete(target.dataset.moneySettingsTab);
     } else {
+      openMoneySettingsPanels.clear();
       openMoneySettingsPanels.add(target.dataset.moneySettingsTab);
     }
     saveOpenSections("makeSpendMoneySettingsOpen", openMoneySettingsPanels);
@@ -3393,7 +3922,8 @@ document.addEventListener("click", async (event) => {
   }
   if (target.dataset.delete) {
     if (!confirm("Delete this transaction?")) return;
-    const transaction = state.transactions.find((item) => item.id === target.dataset.delete);
+    const index = state.transactions.findIndex((item) => item.id === target.dataset.delete);
+    const transaction = state.transactions[index];
     if (transaction) {
       try {
         await deleteSharedTransaction(transaction);
@@ -3401,8 +3931,18 @@ document.addEventListener("click", async (event) => {
         setJointTabStatus(jointTabErrorMessage(error));
       }
     }
-    state.transactions = state.transactions.filter((item) => item.id !== target.dataset.delete);
+    if (!transaction) return;
+    state.transactions.splice(index, 1);
     render();
+    showUndo("Transaction deleted.", async () => {
+      restoreItemAt(state.transactions, transaction, index);
+      try {
+        await saveSharedTransaction(transaction);
+      } catch (error) {
+        setJointTabStatus(jointTabErrorMessage(error));
+      }
+      render();
+    });
   }
   if (target.id === "openInvestment") openInvestmentForm();
   if (target.dataset.addInvestmentCountry) openInvestmentForm(null, target.dataset.addInvestmentCountry);
@@ -3412,8 +3952,15 @@ document.addEventListener("click", async (event) => {
   }
   if (target.dataset.deleteInvestment) {
     if (!confirm("Delete this investment?")) return;
-    state.investments = state.investments.filter((item) => item.id !== target.dataset.deleteInvestment);
+    const index = state.investments.findIndex((item) => item.id === target.dataset.deleteInvestment);
+    const investment = state.investments[index];
+    if (!investment) return;
+    state.investments.splice(index, 1);
     render();
+    showUndo("Investment deleted.", () => {
+      restoreItemAt(state.investments, investment, index);
+      render();
+    });
   }
   if (target.id === "openTransfer") openTransferForm();
   if (target.dataset.editTransfer) {
@@ -3422,10 +3969,19 @@ document.addEventListener("click", async (event) => {
   }
   if (target.dataset.deleteTransfer) {
     if (!confirm("Delete this transfer?")) return;
-    state.transfers = state.transfers.filter((item) => item.id !== target.dataset.deleteTransfer);
+    const index = state.transfers.findIndex((item) => item.id === target.dataset.deleteTransfer);
+    const transfer = state.transfers[index];
+    if (!transfer) return;
+    state.transfers.splice(index, 1);
     render();
+    showUndo("Transfer deleted.", () => {
+      restoreItemAt(state.transfers, transfer, index);
+      render();
+    });
   }
   if (target.dataset.addList) addListItem(target.dataset.addList);
+  if (target.dataset.toggleListOrder) toggleListOrdering(target.dataset.toggleListOrder);
+  if (target.dataset.moveList) moveListItem(target.dataset.moveList, target.dataset.name, target.dataset.direction);
   if (target.dataset.renameList) renameListItem(target.dataset.renameList, target.dataset.name);
   if (target.dataset.deleteList) deleteListItem(target.dataset.deleteList, target.dataset.name);
   if (target.dataset.resetColor) resetChartColor(target.dataset.resetColor, target.dataset.colorName);
@@ -3445,10 +4001,54 @@ document.addEventListener("click", async (event) => {
   if (target.id === "createCloudBackup") createCloudBackupNow();
   if (target.id === "loadCloudBackups") loadCloudBackups(false);
   if (target.dataset.restoreCloudBackup) restoreCloudBackup(target.dataset.restoreCloudBackup);
+  if (target.id === "openTutorial") openTutorial(0);
+  if (target.id === "tutorialBack") previousTutorialSlide();
+  if (target.id === "tutorialNext") nextTutorialSlide();
+  if (target.dataset.tutorialDot) {
+    tutorialIndex = Number(target.dataset.tutorialDot) || 0;
+    renderTutorialSlide();
+  }
   if (target.dataset.copyInvite) {
     await navigator.clipboard?.writeText(target.dataset.copyInvite);
     setJointTabStatus("Invite code copied.");
   }
+});
+
+document.addEventListener("pointerdown", (event) => {
+  const handle = event.target.closest("[data-list-drag-handle]");
+  if (!handle) return;
+  const row = handle.closest(".order-item");
+  const listElement = row?.closest(".editable-list");
+  if (!row || !listElement) return;
+  event.preventDefault();
+  activeListDrag = {
+    pointerId: event.pointerId,
+    row,
+    listElement,
+    type: row.dataset.listType
+  };
+  row.classList.add("dragging");
+  document.body.classList.add("reordering-list");
+  handle.setPointerCapture?.(event.pointerId);
+});
+
+document.addEventListener("pointermove", (event) => {
+  if (!activeListDrag || event.pointerId !== activeListDrag.pointerId) return;
+  event.preventDefault();
+  const { row, listElement } = activeListDrag;
+  const hovered = document.elementFromPoint(event.clientX, event.clientY)?.closest(".order-item");
+  if (!hovered || hovered === row || hovered.parentElement !== listElement) return;
+  const rect = hovered.getBoundingClientRect();
+  if (event.clientY < rect.top + rect.height / 2) listElement.insertBefore(row, hovered);
+  else listElement.insertBefore(row, hovered.nextElementSibling);
+});
+
+document.addEventListener("pointerup", (event) => {
+  if (activeListDrag && event.pointerId === activeListDrag.pointerId) finishListDrag();
+});
+
+document.addEventListener("pointercancel", (event) => {
+  if (activeListDrag && event.pointerId === activeListDrag.pointerId) finishListDrag();
 });
 
 document.addEventListener("change", (event) => {
@@ -3480,11 +4080,17 @@ $("#closeDialog").addEventListener("click", () => {
 $("#closeInvestmentDialog").addEventListener("click", () => {
   closeDialog($("#investmentDialog"));
 });
+$("#closeTutorialDialog").addEventListener("click", () => {
+  closeTutorial(true);
+});
 $("#closeTransferDialog").addEventListener("click", () => {
   closeDialog($("#transferDialog"));
 });
 $$("dialog").forEach((dialog) => {
   dialog.addEventListener("close", unlockPageBehindDialog);
+});
+$("#tutorialDialog")?.addEventListener("cancel", () => {
+  localStorage.setItem("makeSpendTutorialSeen", "true");
 });
 $("#currencyInput").addEventListener("change", (event) => {
   $("#transactionCountryInput").value = countryIdForCurrency(event.target.value);
@@ -3605,6 +4211,13 @@ $("#unlockPin").addEventListener("keydown", (event) => {
 $("#importBackup").addEventListener("change", (event) => {
   if (event.target.files[0]) backupImport(event.target.files[0]);
 });
+
+window.addEventListener("online", () => {
+  cloudState.syncError = "";
+  renderSyncIndicator();
+  if (cloudState.enabled && cloudState.user) pullLatestCloudData();
+});
+window.addEventListener("offline", renderSyncIndicator);
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js");

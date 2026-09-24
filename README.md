@@ -14,6 +14,8 @@ The **Reports** tab keeps month and year records, with separate report sections 
 
 Settings is split into simple open/close categories: Account, Language, Money, Lists, Reminders, Colors, and Backup. The Money category has smaller open/close sections for Main currency, Currency tabs, and Conversion rates. You can add a currency tab, choose its code/name/symbol, set its CAD exchange rate, show or hide tabs, and delete empty tabs. Tabs with old records can be hidden instead of deleted so the old data stays safe.
 
+Settings includes a simple **Tutorial** category with a button that opens a quick slideshow. The slideshow also appears automatically once on a device after the user finishes account setup or signs in.
+
 The **Language** category lets the user switch the app between English and Portuguese. The selected language is saved and reused after refresh.
 
 The **Transactions** tab shows all money records in one searchable list, including income, expenses, investments, and transfers. You can filter by record type, category/source, and currency.
